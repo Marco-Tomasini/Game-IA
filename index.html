@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xbox Aurora Dashboard Clone</title>
+    <style>
+        :root {
+            --xbox-green: #107C10;
+            --xbox-green-light: #16db16;
+            --bg-dark: #0a0a0a;
+            --card-width: 260px;
+            --card-height: 360px;
+            --aurora-bg: radial-gradient(circle at top, #003366 0%, #050505 50%, #4d3300 100%);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: var(--aurora-bg);
+            background-attachment: fixed;
+            color: white;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 50px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            z-index: 1000;
+        }
+
+        .stats { display: flex; gap: 25px; }
+        .stat-item { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #aaa; }
+        .stat-item span { color: var(--xbox-green-light); min-width: 45px; }
+        .bar { width: 45px; height: 6px; background: #222; border-radius: 3px; overflow: hidden; position: relative; }
+        .fill { height: 100%; background: var(--xbox-green); transition: width 0.5s ease; box-shadow: 0 0 10px var(--xbox-green); }
+
+        .viewport {
+            flex-grow: 1;
+            perspective: 1200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-top: -50px;
+        }
+
+        .carousel {
+            position: relative;
+            width: 100%;
+            height: var(--card-height);
+            transform-style: preserve-3d;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.3s ease;
+        }
+
+        .card {
+            position: absolute;
+            width: var(--card-width);
+            height: var(--card-height);
+            background-size: cover;
+            background-position: center;
+            border-radius: 4px;
+            transition: all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+            cursor: pointer;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.8);
+            -webkit-box-reflect: below 4px linear-gradient(transparent, transparent 60%, rgba(255,255,255,0.15));
+        }
+
+        .card.active {
+            z-index: 100;
+            border: 4px solid var(--xbox-green-light);
+            box-shadow: 0 0 30px var(--xbox-green), 0 15px 50px rgba(0,0,0,0.9);
+        }
+
+        .game-info {
+            position: absolute;
+            bottom: 80px;
+            text-align: center;
+            z-index: 200;
+            pointer-events: none;
+        }
+
+        .game-title {
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            padding: 8px 50px;
+            border-radius: 30px;
+            font-weight: 800;
+            font-size: 1.4rem;
+            text-transform: uppercase;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: inline-block;
+        }
+
+        /* --- MODAL DE DETALHES --- */
+        #details-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s ease;
+        }
+
+        #details-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .details-card {
+            width: 850px;
+            background: #1a1a1a;
+            border-radius: 15px;
+            border: 2px solid var(--xbox-green);
+            display: flex;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,1);
+            transform: scale(0.9);
+            transition: transform 0.4s ease;
+        }
+
+        #details-overlay.active .details-card {
+            transform: scale(1);
+        }
+
+        .details-left {
+            width: 300px;
+            height: 420px;
+            background-size: cover;
+            background-position: center;
+            border-right: 2px solid var(--xbox-green);
+        }
+
+        .details-right {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .details-header h1 {
+            margin: 0;
+            color: var(--xbox-green-light);
+            font-size: 2rem;
+            text-transform: uppercase;
+        }
+
+        .details-header p {
+            color: #888;
+            margin: 5px 0 20px 0;
+            font-size: 14px;
+        }
+
+        .synopsis {
+            font-size: 16px;
+            line-height: 1.5;
+            color: #ddd;
+            max-height: 150px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .play-stats {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-box strong { display: block; color: var(--xbox-green-light); font-size: 12px; }
+        .stat-box span { font-size: 18px; font-weight: bold; }
+
+        .launch-btn {
+            background: var(--xbox-green);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: background 0.2s;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .launch-btn:hover { background: var(--xbox-green-light); }
+
+        .bottom-bar {
+            height: 70px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.7));
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 50px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            z-index: 1000;
+        }
+
+        .controls { display: flex; gap: 20px; }
+        .btn { display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 14px; opacity: 0.9; }
+        .circle { 
+            width: 22px; height: 22px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 900; color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+        .a-btn { background: #107C10; }
+        .b-btn { background: #E81123; }
+        .x-btn { background: #0078D7; }
+        .y-btn { background: #FFB900; }
+
+        #clock { font-size: 18px; font-weight: 300; letter-spacing: 2px; }
+
+        .glow-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, transparent 0%, rgba(0,0,0,0.4) 100%);
+            pointer-events: none;
+        }
+
+        #notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid var(--xbox-green);
+            padding: 20px 40px;
+            border-radius: 10px;
+            z-index: 5000;
+            text-align: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 50px rgba(16, 124, 16, 0.5);
+        }
+
+        #notification.show { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
+        #notification h2 { margin: 0 0 10px 0; color: var(--xbox-green-light); }
+    </style>
+</head>
+<body>
+
+    <div class="glow-overlay"></div>
+
+    <!-- Modal de Detalhes -->
+    <div id="details-overlay">
+        <div class="details-card">
+            <div class="details-left" id="det-img"></div>
+            <div class="details-right">
+                <div class="details-header">
+                    <h1 id="det-title">Título do Jogo</h1>
+                    <p>Desenvolvido por: Studio HTML</p>
+                    <div class="synopsis" id="det-synopsis">Sinopse aqui...</div>
+                </div>
+                <div class="play-stats">
+                    <div class="stat-box"><strong>TEMPO DE JOGO</strong><span id="det-time">0h 00m 00s</span></div>
+                    <div class="stat-box"><strong>ESTADO</strong><span>INSTALADO</span></div>
+                </div>
+                <button class="launch-btn" onclick="btnA_Action()">
+                    <span class="circle a-btn">A</span> INICIAR JOGO
+                </button>
+                <button class="launch-btn" onclick="hideDetails()">
+                    <span class="circle b-btn">B</span> SAIR
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Elemento de Notificação -->
+    <div id="notification">
+        <h2 id="notify-title">Ação</h2>
+        <p id="notify-msg">Mensagem...</p>
+    </div>
+
+    <div class="top-bar">
+        <div class="stats">
+            <div class="stat-item">BAT <span id="stat-bat">--%</span> <div class="bar"><div id="bar-bat" class="fill" style="width: 0%"></div></div></div>
+            <div class="stat-item">CPU <span id="stat-cpu">-- cores</span> <div class="bar"><div id="bar-cpu" class="fill" style="width: 0%"></div></div></div>
+        </div>
+        <div style="font-weight: bold; color: var(--xbox-green-light)">XBOX 360 | Aurora</div>
+    </div>
+
+    <div class="viewport">
+        <div class="game-info">
+            <div class="game-title" id="gameName">Carregando Jogo...</div>
+        </div>
+        <div class="carousel" id="carousel"></div>
+    </div>
+
+    <div class="bottom-bar">
+        <div class="controls">
+            <div class="btn"><span class="circle a-btn">A</span> Iniciar</div>
+            <div class="btn"><span class="circle b-btn">B</span> Voltar</div>
+            <div class="btn"><span class="circle x-btn">X</span> Detalhes</div>
+        </div>
+        <div id="clock">00:00</div>
+    </div>
+
+    <script>
+        const games = [
+            { 
+                id: "fnaf",
+                name: "Five Nights At HTML's", 
+                img: "img/Capa_Fnaf.png", 
+                synopsis: "Você é o segurança noturno em uma pizzaria assombrada por códigos mal escritos. Sobreviva até as 6 da manhã enquanto animações CSS ganham vida própria.",
+                totalSeconds: 0
+            },
+            { id: "soon2", name: "EM BREVE", img: "", synopsis: "Jogo em desenvolvimento.", totalSeconds: 0 },
+            { id: "soon2", name: "EM BREVE", img: "", synopsis: "Jogo em desenvolvimento.", totalSeconds: 0 },
+            { id: "soon1", name: "EM BREVE", img: "", synopsis: "Jogo em desenvolvimento.", totalSeconds: 0 },
+            { id: "soon2", name: "EM BREVE", img: "", synopsis: "Jogo em desenvolvimento.", totalSeconds: 0 }
+        ];
+
+        let currentIndex = 0;
+        let isDetailsOpen = false;
+        const carousel = document.getElementById('carousel');
+        const gameNameDisplay = document.getElementById('gameName');
+        const notification = document.getElementById('notification');
+        const detailsOverlay = document.getElementById('details-overlay');
+
+        function loadPlaytime() {
+            const savedData = localStorage.getItem('xbox_playtime_data');
+            if (savedData) {
+                const parsed = JSON.parse(savedData);
+                games.forEach(game => {
+                    if (parsed[game.id]) game.totalSeconds = parsed[game.id];
+                });
+            }
+        }
+
+        function savePlaytime() {
+            const dataToSave = {};
+            games.forEach(game => dataToSave[game.id] = game.totalSeconds);
+            localStorage.setItem('xbox_playtime_data', JSON.stringify(dataToSave));
+        }
+
+        function formatTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            return `${h}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+        }
+
+        setInterval(() => {
+            games[currentIndex].totalSeconds++;
+            if (isDetailsOpen) {
+                document.getElementById('det-time').innerText = formatTime(games[currentIndex].totalSeconds);
+            }
+            if (games[currentIndex].totalSeconds % 10 === 0) savePlaytime();
+        }, 1000);
+
+        function showNotify(title, msg) {
+            document.getElementById('notify-title').innerText = title;
+            document.getElementById('notify-msg').innerText = msg;
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 2000);
+        }
+
+        function btnA_Action() {
+            const game = games[currentIndex];
+            if(isDetailsOpen) hideDetails();
+            
+            showNotify("Iniciando Jogo", `Lançando ${game.name}...`);
+            
+            // Lógica de Redirecionamento Real
+            setTimeout(() => {
+                if (game.id === "fnaf") {
+                    window.location.href = "C:/Users/McNic/Desktop/Game-IA/FNAF/Fnaf_Game.html";
+                } else {
+                    console.log("Jogo não configurado para inicialização: " + game.name);
+                }
+            }, 2000);
+        }
+
+        function btnB_Action() {
+            if(isDetailsOpen) hideDetails();
+            else showNotify("Voltar", "Retornando ao menu anterior...");
+        }
+
+        function showDetails() {
+            const game = games[currentIndex];
+            document.getElementById('det-title').innerText = game.name;
+            document.getElementById('det-synopsis').innerText = game.synopsis;
+            document.getElementById('det-time').innerText = formatTime(game.totalSeconds);
+            document.getElementById('det-img').style.backgroundImage = `url('${game.img}')`;
+            
+            detailsOverlay.classList.add('active');
+            document.querySelector('.carousel').style.opacity = "0.2";
+            isDetailsOpen = true;
+        }
+
+        function hideDetails() {
+            detailsOverlay.classList.remove('active');
+            document.querySelector('.carousel').style.opacity = "1";
+            isDetailsOpen = false;
+            savePlaytime();
+        }
+
+        function createCards() {
+            carousel.innerHTML = "";
+            games.forEach((game, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style.backgroundImage = `url('${game.img}')`;
+                card.style.backgroundColor = '#222';
+                card.addEventListener('click', () => {
+                    if(currentIndex === index) showDetails();
+                    else { currentIndex = index; updateCarousel(); }
+                });
+                carousel.appendChild(card);
+            });
+        }
+
+        function updateCarousel() {
+            const cards = document.querySelectorAll('.card');
+            gameNameDisplay.innerText = games[currentIndex].name;
+            cards.forEach((card, index) => {
+                const offset = index - currentIndex;
+                if (offset === 0) {
+                    card.className = 'card active';
+                    card.style.transform = `translateX(0) translateZ(200px) rotateY(0deg)`;
+                    card.style.opacity = "1";
+                    card.style.filter = "brightness(1.1)";
+                } else {
+                    card.className = 'card';
+                    const direction = offset > 0 ? 1 : -1;
+                    const spacing = 160; 
+                    const rotateY = direction * -50; 
+                    const translateX = (offset * spacing) + (direction * 80);
+                    card.style.transform = `translateX(${translateX}px) translateZ(0px) rotateY(${rotateY}deg)`;
+                    card.style.opacity = Math.max(0.1, 1 - Math.abs(offset) * 0.35);
+                    card.style.filter = `brightness(${0.6 - Math.abs(offset) * 0.1})`;
+                    card.style.zIndex = 10 - Math.abs(offset);
+                }
+            });
+        }
+
+        async function updateLiveStats() {
+            if (navigator.getBattery) {
+                const battery = await navigator.getBattery();
+                const updateBatteryUI = () => {
+                    const level = Math.round(battery.level * 100);
+                    document.getElementById('stat-bat').innerText = `${level}%`;
+                    document.getElementById('bar-bat').style.width = `${level}%`;
+                };
+                updateBatteryUI();
+                battery.addEventListener('levelchange', updateBatteryUI);
+            }
+            document.getElementById('stat-cpu').innerText = `${navigator.hardwareConcurrency || 4} cores`;
+            document.getElementById('bar-cpu').style.width = `35%`;
+        }
+
+        window.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+            if(isDetailsOpen) {
+                if (key === 'escape' || key === 'backspace' || key === 'b') btnB_Action();
+                if (key === 'enter' || key === 'a') btnA_Action();
+                return;
+            }
+            if ((key === 'arrowright' || key === 'd') && currentIndex < games.length - 1) {
+                currentIndex++; updateCarousel();
+            } else if ((key === 'arrowleft' || key === 'a') && currentIndex > 0) {
+                currentIndex--; updateCarousel();
+            }
+            if (key === 'enter' || key === 'a') btnA_Action();
+            else if (key === 'escape' || key === 'backspace' || key === 'b') btnB_Action();
+            else if (key === 'x') showDetails();
+        });
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase();
+        }
+
+        loadPlaytime();
+        createCards();
+        updateCarousel();
+        updateClock();
+        updateLiveStats();
+        setInterval(updateClock, 1000 * 30);
+    </script>
+</body>
+</html>
