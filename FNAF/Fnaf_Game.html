@@ -625,7 +625,29 @@
             localStorage.setItem('fnaf_saved_night', state.night + 1);
         }
     }
-
+    function checkAttacks() {
+        const avgAI = (state.aiLevels.bonnie + state.aiLevels.chica) / 2;
+        const reactTime = Math.max(2250, 6000 - (avgAI * 200));
+        
+        if(state.ai.bonnie === 'DOOR' && !state.doors.l) setTimeout(() => { if(!state.doors.l && state.ai.bonnie === 'DOOR') jumpscare('bonnie'); }, reactTime);
+        if(state.ai.chica === 'DOOR' && !state.doors.r) setTimeout(() => { if(!state.doors.r && state.ai.chica === 'DOOR') jumpscare('chica'); }, reactTime);
+        if(state.ai.freddy === 'DOOR' && !state.doors.r && !state.cam) jumpscare('freddy');
+        
+        if(state.ai.foxy === 4) {
+            // Delay de 2.5s para coincidir com o som de corrida antes de atacar
+            setTimeout(() => {
+                if(state.over) return;
+                if(state.doors.l) { 
+                    state.ai.foxy = 0; 
+                    const drain = 1 + state.foxyHits;
+                    state.p -= drain;
+                    state.foxyHits++; 
+                    Sfx.playDoor(); 
+                } 
+                else { jumpscare('foxy'); }
+            }, 2500);
+        }
+    }
     function nextNight() {
         if(state.night >= 6) return;
         state.night++;
