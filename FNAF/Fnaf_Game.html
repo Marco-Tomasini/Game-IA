@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Five Nights at HTML's</title>
+    <style>
+        :root { --font: 'Courier New', monospace; --purple: #4a3c6e; --gold: #d4af37; --brown: #654321; --red: #8b0000; }
+        
+        body { background: #000; color: #fff; margin: 0; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; width: 100vw; font-family: var(--font); user-select: none; }
+        #game-screen { position: relative; width: 100vw; height: 100vh; background: #050505; overflow: hidden; }
+        .layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+
+        /* MENU INICIAL */
+        #menu-screen { z-index: 20000; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding-left: 10%; pointer-events: auto; }
+        #menu-screen h1 { font-size: 80px; margin: 0; line-height: 0.9; text-shadow: 2px 2px #333; }
+        #menu-screen .menu-options { margin-top: 50px; display: flex; flex-direction: column; gap: 20px; }
+        .menu-btn { font-size: 30px; cursor: pointer; color: #aaa; transition: 0.2s; background: none; border: none; font-family: var(--font); text-align: left; padding: 0; }
+        .menu-btn:hover { color: #fff; text-shadow: 0 0 10px #fff; transform: translateX(10px); }
+        .menu-btn::before { content: "> "; opacity: 0; transition: 0.2s; }
+        .menu-btn:hover::before { opacity: 1; }
+        .menu-btn.disabled { opacity: 0.2; cursor: default; pointer-events: none; }
+
+        /* CUSTOM NIGHT SCREEN */
+        #custom-screen { z-index: 25000; background: #000; display: none; flex-direction: column; justify-content: center; align-items: center; pointer-events: auto; }
+        .cn-container { display: flex; gap: 30px; margin-bottom: 50px; }
+        .cn-char { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .cn-portrait { width: 120px; height: 150px; border: 4px solid #444; }
+        .cn-level-box { display: flex; align-items: center; gap: 15px; font-size: 30px; }
+        .cn-arrow { cursor: pointer; color: #fff; background: #222; border: 2px solid #444; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; }
+        .cn-arrow:hover { background: #444; }
+
+        /* OFFICE & DOORS */
+        #office { z-index: 10; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 10% 100px 10%; box-sizing: border-box; background: radial-gradient(circle, #1a1a1a 0%, #000 100%); }
+        .door-frame { width: 30%; height: 80%; background: #000; border: 4px solid #222; position: relative; overflow: hidden; display: flex; justify-content: center; align-items: flex-end; }
+        .door-slat { opacity: 90%; position: absolute; top: -100%; left: 0; width: 100%; height: 100%; background: linear-gradient(#222, #444, #222); border-bottom: 20px solid #000; transition: top 0.25s cubic-bezier(0.4, 0, 0.2, 1); z-index: 50; }
+        .door-slat.closed { opacity: 90%; top: 0; }
+        .light-fx { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 150, 0.15); opacity: 0; transition: opacity 0.05s; z-index: 5; }
+
+        /* MODELOS DO ESCRITÓRIO */
+        .anim-model { width: 100%; height: 80%; position: relative; z-index: 8; display: none; margin-bottom: 20px; }
+        .bonnie { background: url('img/BonnieC.png') no-repeat center/contain; border: none; }
+        .chica { background: url('img/ChicaC.png') no-repeat center/contain; border: none; }
+
+        /* HUD & INTERFACE */
+        .clock { position: absolute; top: 30px; right: 40px; font-size: 50px; font-weight: bold; z-index: 1000; }
+        .night-indicator { position: absolute; top: 90px; right: 40px; font-size: 20px; color: #888; z-index: 1000; }
+        .power-hud { position: absolute; bottom: 30px; left: 40px; font-size: 30px; z-index: 1000; background: rgba(0,0,0,0.8); padding: 10px; border: 1px solid #444; }
+        .panel { position: absolute; top: 35%; display: flex; flex-direction: column; gap: 20px; z-index: 500; pointer-events: auto; }
+        .left-p { left: 30px; } .right-p { right: 30px; }
+        .btn { width: 80px; height: 100px; background: #222; border: 4px solid #444; color: #fff; cursor: pointer; font-size: 14px; font-weight: bold; }
+        .btn.active-d { background: #800; border-color: #f00; }
+        .btn.active-l { background: #880; border-color: #ff0; }
+
+        /* CÂMERA MONITOR LAYOUT */
+        #monitor-toggle { position: absolute; bottom: 0; left: 30%; width: 40%; height: 60px; background: rgba(255,255,255,0.1); border: 2px solid #fff; z-index: 3000; pointer-events: auto; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }         
+        #monitor-toggle:hover { background: rgba(255,255,255,0.2); }
+        
+        #cam-overlay { display: none; z-index: 2500; background: #000; pointer-events: auto; color: #fff; }
+        #cam-container { display: flex; height: 100%; width: 100%; position: relative; }
+        
+        /* Visão da Câmera */
+        #cam-view { flex: 1; background: #111; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* Efeito de Estática */
+        #static-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5;
+            opacity: 0.35;
+            background-color: rgba(255,255,255,0.12);
+            background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+            filter: contrast(2.5) brightness(1.5) grayscale(0.2);
+            animation: noise-anim 0.09s infinite;
+            transition: opacity 0.1s;
+        }
+        @keyframes noise-anim { 0% { background-position: 0 0; } 20% { background-position: 10% 5%; } 40% { background-position: -5% 15%; } 60% { background-position: 15% -10%; } 80% { background-position: -10% 5%; } 100% { background-position: 5% 0%; } }
+
+        /* REC Indicator */
+        #rec-box { position: absolute; top: 40px; left: 40px; display: flex; align-items: center; gap: 15px; font-size: 32px; font-weight: bold; color: #fff; z-index: 10; text-shadow: 2px 2px #000; }
+        #rec-dot { width: 25px; height: 25px; background: #f00; border-radius: 50%; animation: blink 1s infinite; box-shadow: 0 0 10px #f00; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* Map Design */
+        #map-container { width: 350px; height: 450px; background: rgba(0,0,0,0.85); position: absolute; bottom: 40px; right: 40px; border: 2px solid #888; z-index: 20; 
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='350' height='450' viewBox='0 0 350 450'%3E%3Cpath d='M120 30h110v70h70v80h-70v80h70v80h-180v-80h-80v-80h80V30z' fill='none' stroke='white' stroke-width='2'/%3E%3Cpath d='M140 340h70v70h-70z' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: center;
+        }
+        
+        /* Botões do Mapa */
+        .cam-btn { position: absolute; width: 50px; height: 35px; background: #222; border: 2px solid #fff; color: #fff; font-weight: bold; font-size: 11px; cursor: pointer; display: flex; justify-content: center; align-items: center; z-index: 30; transition: 0.1s; }
+        .cam-btn:hover { background: #444; }
+        .cam-btn.active { background: #fff; color: #000; box-shadow: 0 0 15px #fff; }
+
+        /* Ajuste de Posições (Design Planta Baixa) */
+        #btn-1A { top: 35px; left: 150px; } #btn-1B { top: 120px; left: 150px; } #btn-1C { top: 220px; left: 40px; }
+        #btn-5 { top: 120px; left: 40px; } #btn-3 { top: 310px; left: 40px; }
+        #btn-2A { top: 280px; left: 105px; } #btn-2B { top: 335px; left: 105px; }
+        #btn-4A { top: 280px; left: 195px; } #btn-4B { top: 335px; left: 195px; }
+        #btn-6 { top: 310px; left: 260px; } #btn-7 { top: 120px; left: 260px; }
+        #you-marker { position: absolute; top: 360px; left: 165px; width: 18px; height: 18px; background: #fff; border-radius: 50%; box-shadow: 0 0 10px #fff; }
+
+        /* ELEMENTOS VISUAIS DA CÂMERA */
+        #cam-label { position: absolute; top: 40px; right: 400px; font-size: 35px; z-index: 10; text-shadow: 2px 2px #000; font-weight: bold; }
+        #cam-icons-container { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; gap: 20px; z-index: 4; }
+        .cam-icon { width: 100px; height: 100px; border: 3px solid #fff; display: none;}
+        .icon-freddy { background: url('img/FreddyJ.png') no-repeat center/contain; border: none; }
+        .icon-bonnie { background: url('img/BonnieJ.png') no-repeat center/contain; border: none; }
+        .icon-chica { background: url('img/ChicaJ.png') no-repeat center/contain; border: none; }
+        .icon-foxy { background: url('img/FoxyJ.png') no-repeat center/contain; border: none; }
+
+        /* Controles do Foxy */
+        #foxy-controls { display: none; flex-direction: column; align-items: left; gap: 10px; padding: 25px; background: #000; border: 2px solid #444; position: absolute; top: 100px; left: 40px; z-index: 10; width: 250px; }
+        #foxy-controls button { padding: 10px; cursor: pointer; background: #800; color: #fff; border: 2px solid #fff; font-weight: bold; }
+
+        /* TELAS FINAIS */
+        #win-screen, #jumpscare-layer { display: none; z-index: 10000; background: #000; align-items: center; justify-content: center; flex-direction: column; pointer-events: auto; text-align: center; }
+        #scare-box { transform: scale(3.5); animation: aggressive-shake 0.04s infinite; }
+        @keyframes aggressive-shake { 0% { transform: translate(3px, 3px); } 100% { transform: translate(-3px, -3px); } }
+
+        .win-btn { padding: 15px 40px; cursor: pointer; background: #222; color: #fff; border: 2px solid #0f0; font-family: var(--font); font-size: 20px; }
+        .win-btn:hover { background: #040; }
+    </style>
+</head>
+<body>
+
+<div id="game-screen">
+    <!-- MENU INICIAL -->
+    <div id="menu-screen" class="layer">
+        <div style="position: absolute; right: 5%; bottom: 0; display: flex; align-items: flex-end; z-index: 1; pointer-events: none;">
+            <img src="img/FreddyC.png" style="height: 55vh; filter: brightness(0.3); margin-right: -130px; margin-left: -130px; margin-bottom: 150px;">
+            <img src="img/BonnieC.png" style="height: 55vh; filter: brightness(0.3); margin-right: -130px; margin-left: -130px; margin-bottom: 150px;">
+            <img src="img/ChicaC.png" style="height: 55vh; filter: brightness(0.3); margin-right: -130px; margin-left: -130px; margin-bottom: 150px;">
+            <img src="img/FoxyC.png" style="height: 55vh; filter: brightness(0.3); margin-left: -130px; margin-bottom: 150px;">
+        </div>
+        <div id="static-overlay" style="opacity: 0.1; z-index: 1;"></div>
+        <h1 style="z-index: 2;">FIVE<br>NIGHTS<br>AT<br>HTML'S</h1>
+        <p style="z-index: 2; color: #444; margin-top: 10px;">WEB VERSION</p>
+        
+        <div class="menu-options" style="z-index: 2;">
+            <button class="menu-btn" onclick="startGame(1)">Novo Jogo</button>
+            <button id="btn-continue" class="menu-btn disabled" onclick="continueGame()">Continuar</button>
+            <button id="btn-night6" class="menu-btn disabled" onclick="startGame(6)">6ª Noite</button>
+            <button id="btn-custom" class="menu-btn disabled" onclick="openCustom()">Custom Night</button>
+        </div>
+        
+        <p style="position: absolute; bottom: 20px; left: 10%; color: #333; font-size: 12px; z-index: 2;">© 1987 Fazbear Entertainment</p>
+    </div>
+
+    <!-- TELA CUSTOM NIGHT -->
+    <div id="custom-screen" class="layer">
+        <h2 style="font-size: 50px; margin-bottom: 40px;">CUSTOM NIGHT</h2>
+        <div class="cn-container">
+            <div class="cn-char">
+                <div class="cn-portrait" style="background: url('img/FreddyJ.png') no-repeat center/cover; border: 4px solid #444;"></div>
+                <p>FREDDY</p>
+                <div class="cn-level-box">
+                    <div class="cn-arrow" onclick="changeCN('freddy', -1)">-</div>
+                    <span id="cn-freddy">0</span>
+                    <div class="cn-arrow" onclick="changeCN('freddy', 1)">+</div>
+                </div>
+            </div>
+            <div class="cn-char">
+                <div class="cn-portrait" style="background: url('img/BonnieJ.png') no-repeat center/cover; border: 4px solid #444;"></div>
+                <p>BONNIE</p>
+                <div class="cn-level-box">
+                    <div class="cn-arrow" onclick="changeCN('bonnie', -1)">-</div>
+                    <span id="cn-bonnie">0</span>
+                    <div class="cn-arrow" onclick="changeCN('bonnie', 1)">+</div>
+                </div>
+            </div>
+            <div class="cn-char">
+                <div class="cn-portrait" style="background: url('img/ChicaJ.png') no-repeat center/cover; border: 4px solid #444;"></div>
+                <p>CHICA</p>
+                <div class="cn-level-box">
+                    <div class="cn-arrow" onclick="changeCN('chica', -1)">-</div>
+                    <span id="cn-chica">0</span>
+                    <div class="cn-arrow" onclick="changeCN('chica', 1)">+</div>
+                </div>
+            </div>
+            <div class="cn-char">
+                <div class="cn-portrait" style="background: url('img/FoxyJ.png') no-repeat center/cover; border: 4px solid #444;"></div>
+                <p>FOXY</p>
+                <div class="cn-level-box">
+                    <div class="cn-arrow" onclick="changeCN('foxy', -1)">-</div>
+                    <span id="cn-foxy">0</span>
+                    <div class="cn-arrow" onclick="changeCN('foxy', 1)">+</div>
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 20px;">
+            <button class="win-btn" onclick="startCustom()">INICIAR</button>
+            <button class="win-btn" onclick="location.reload()" style="border-color: #fff;">VOLTAR</button>
+        </div>
+    </div>
+
+    <!-- TELAS DE JOGO -->
+    <div id="win-screen" class="layer">
+        <h1 style="font-size: 120px; text-shadow: 0 0 30px #0f0; margin: 0;">6 AM</h1>
+        <p id="win-msg" style="margin-bottom: 30px;">VOCÊ SOBREVIVEU À NOITE 1</p>
+        <div style="display: flex; gap: 20px;">
+            <button id="btn-next-night" class="win-btn" onclick="nextNight()">PRÓXIMA NOITE</button>
+            <button class="win-btn" onclick="location.reload()" style="border-color: #fff;">VOLTAR AO MENU</button>
+        </div>
+    </div>
+
+    <div id="jumpscare-layer" class="layer">
+        <div id="scare-box"></div>
+    </div>
+
+    <div id="office" class="layer">
+        <div class="door-frame">
+            <div id="l-light" class="light-fx"></div>
+            <div id="anim-bonnie" class="anim-model bonnie"><div style="left:20px"></div><div style="right:20px"></div></div>
+            <div id="door-l" class="door-slat"></div>
+        </div>
+        <div class="door-frame">
+            <div id="r-light" class="light-fx"></div>
+            <div id="anim-chica" class="anim-model chica"><div style="left:20px; background: pink;"></div><div style="right:20px; background: pink;"></div></div>
+            <div id="door-r" class="door-slat"></div>
+        </div>
+    </div>
+
+    <div class="panel left-p">
+        <button id="b-d-l" class="btn" onclick="toggleD('l')">PORTA</button>
+        <button id="b-l-l" class="btn" onmousedown="toggleL('l', true)" onmouseup="toggleL('l', false)">LUZ</button>
+    </div>
+    <div class="panel right-p">
+        <button id="b-d-r" class="btn" onclick="toggleD('r')">PORTA</button>
+        <button id="b-l-r" class="btn" onmousedown="toggleL('r', true)" onmouseup="toggleL('r', false)">LUZ</button>
+    </div>
+
+    <div class="power-hud">BATERIA: <span id="p-val">100</span>%</div>
+    <div class="clock" id="clock-txt">12 AM</div>
+    <div class="night-indicator" id="night-txt">Noite 1</div>
+    <div id="monitor-toggle" onclick="toggleC()">ABRIR MONITOR</div>
+
+    <div id="cam-overlay" class="layer">
+        <div id="cam-container">
+            <div id="cam-view">
+                <div id="static-overlay"></div>
+                <div id="rec-box"><div id="rec-dot"></div>REC</div>
+                <div id="cam-label">CAM 1A</div>
+                
+                <div id="cam-icons-container">
+                    <div id="icon-freddy" class="cam-icon icon-freddy" title="Freddy"></div>
+                    <div id="icon-bonnie" class="cam-icon icon-bonnie" title="Bonnie"></div>
+                    <div id="icon-chica" class="cam-icon icon-chica" title="Chica"></div>
+                    <div id="icon-foxy" class="cam-icon icon-foxy" title="Foxy"></div>
+                </div>
+
+                <div id="foxy-controls">
+                    <p>FOXY STATUS: <span id="foxy-status-cam">NO COVE</span></p>
+                    <button onclick="resetFoxy()">OBSERVAR PIRATE COVE</button>
+                </div>
+            </div>
+            <div id="map-container">
+                <div class="cam-btn active" id="btn-1A" onclick="selectCam('1A')">1A</div>
+                <div class="cam-btn" id="btn-1B" onclick="selectCam('1B')">1B</div>
+                <div class="cam-btn" id="btn-1C" onclick="selectCam('1C')">1C</div>
+                <div class="cam-btn" id="btn-5" onclick="selectCam('5')">5</div>
+                <div class="cam-btn" id="btn-3" onclick="selectCam('3')">3</div>
+                <div class="cam-btn" id="btn-2A" onclick="selectCam('2A')">2A</div>
+                <div class="cam-btn" id="btn-2B" onclick="selectCam('2B')">2B</div>
+                <div class="cam-btn" id="btn-4A" onclick="selectCam('4A')">4A</div>
+                <div class="cam-btn" id="btn-4B" onclick="selectCam('4B')">4B</div>
+                <div class="cam-btn" id="btn-6" onclick="selectCam('6')">6</div>
+                <div class="cam-btn" id="btn-7" onclick="selectCam('7')">7</div>
+                <div id="you-marker" title="VOCÊ"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const Sfx = {
+        ctx: new (window.AudioContext || window.webkitAudioContext)(),
+        
+        playCamSwitch() {
+            const bufferSize = this.ctx.sampleRate * 0.15;
+            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            const source = this.ctx.createBufferSource();
+            source.buffer = buffer;
+            const gain = this.ctx.createGain();
+            gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+            source.connect(gain);
+            gain.connect(this.ctx.destination);
+            source.start();
+        },
+
+        playFoxyRun() {
+            const duration = 2.5; const steps = 10;
+            for (let i = 0; i < steps; i++) {
+                const time = this.ctx.currentTime + (i * (duration / steps));
+                const volume = (i / steps) * 0.5;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.frequency.setValueAtTime(60, time);
+                osc.frequency.exponentialRampToValueAtTime(30, time + 0.1);
+                gain.gain.setValueAtTime(volume, time);
+                gain.gain.linearRampToValueAtTime(0, time + 0.15);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(time); osc.stop(time + 0.2);
+            }
+        },
+
+        playScare() {
+            const b = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.5, this.ctx.sampleRate);
+            const d = b.getChannelData(0);
+            for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+            const s = this.ctx.createBufferSource(); s.buffer = b;
+            const g = this.ctx.createGain(); g.gain.value = 0.7;
+            s.connect(g); g.connect(this.ctx.destination); s.start();
+        },
+
+        playDoor() {
+            const b = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.3, this.ctx.sampleRate);
+            const d = b.getChannelData(0);
+            for (let i = 0; i < d.length; i++) d[i] = Math.random() * 0.5;
+            const s = this.ctx.createBufferSource(); s.buffer = b;
+            const f = this.ctx.createBiquadFilter();
+            f.type = "lowpass"; f.frequency.setValueAtTime(400, this.ctx.currentTime);
+            f.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + 0.25);
+            const g = this.ctx.createGain(); g.gain.value = 1.0;
+            s.connect(f); f.connect(g); g.connect(this.ctx.destination); s.start();
+        },
+
+        playLight(on) {
+            if(on) {
+                this.lOsc = this.ctx.createOscillator();
+                this.lGain = this.ctx.createGain();
+                this.lOsc.type = 'square'; this.lOsc.frequency.value = 55;
+                this.lGain.gain.value = 0.03;
+                this.lOsc.connect(this.lGain); this.lGain.connect(this.ctx.destination);
+                this.lOsc.start();
+            } else if(this.lOsc) { try { this.lOsc.stop(); } catch(e){} }
+        }
+    };
+
+    let state = { 
+        p: 100, hour: 12, night: 1, over: true, cam: false, currentCam: '1A',
+        doors: {l:false, r:false}, 
+        ai: { bonnie: 'START', chica: 'START', freddy: '1A', foxy: 0 },
+        aiLevels: { freddy: 0, bonnie: 0, chica: 0, foxy: 0 },
+        foxyHits: 0,
+        gameStarted: false,
+        isCustom: false
+    };
+
+    // --- LÓGICA DE PERSISTÊNCIA ---
+    window.onload = function() {
+        const savedNight = localStorage.getItem('fnaf_saved_night');
+        const numSaved = savedNight ? parseInt(savedNight) : 1;
+        
+        if (numSaved > 1) {
+            const btn = document.getElementById('btn-continue');
+            btn.classList.remove('disabled');
+            btn.innerText = `Continuar (Noite ${numSaved > 5 ? 5 : numSaved})`;
+        }
+        
+        if (numSaved > 5) {
+            const btn6 = document.getElementById('btn-night6');
+            btn6.classList.remove('disabled');
+        }
+
+        if (numSaved > 6) {
+            const btnC = document.getElementById('btn-custom');
+            btnC.classList.remove('disabled');
+        }
+    };
+
+    // --- LÓGICA CUSTOM NIGHT ---
+    function openCustom() {
+        document.getElementById('menu-screen').style.display = 'none';
+        document.getElementById('custom-screen').style.display = 'flex';
+    }
+
+    function changeCN(char, amt) {
+        state.aiLevels[char] = Math.max(0, Math.min(20, state.aiLevels[char] + amt));
+        document.getElementById(`cn-${char}`).innerText = state.aiLevels[char];
+    }
+
+    function startCustom() {
+        state.isCustom = true;
+        startGame(7);
+    }
+
+    function startGame(night) {
+        state.night = night;
+        state.over = false;
+        state.gameStarted = true;
+        
+        if(!state.isCustom) {
+            const diff = state.night;
+            state.aiLevels = {
+                bonnie: diff * 2,
+                chica: diff > 1 ? diff * 1.5 : 0,
+                freddy: diff > 2 ? diff : 0,
+                foxy: diff > 1 ? diff * 1.8 : 0
+            };
+            if(state.night === 6) state.aiLevels = { freddy: 15, bonnie: 18, chica: 18, foxy: 15 };
+        }
+
+        document.getElementById('menu-screen').style.display = 'none';
+        document.getElementById('custom-screen').style.display = 'none';
+        document.getElementById('night-txt').innerText = state.isCustom ? "Custom Night" : `Noite ${state.night}`;
+        
+        setInterval(loop, 200);
+        setInterval(moveAI, 5000);
+        setInterval(() => {
+            if(!state.over) {
+                if(state.hour === 12) state.hour = 1;
+                else state.hour++;
+                
+                document.getElementById('clock-txt').innerText = state.hour + " AM";
+                if(state.hour === 6) win();
+            }
+        }, 45000); 
+    }
+
+    function continueGame() {
+        const savedNight = localStorage.getItem('fnaf_saved_night') || 1;
+        startGame(Math.min(5, parseInt(savedNight)));
+    }
+
+    function selectCam(camId) {
+        if(state.over) return;
+        Sfx.playCamSwitch();
+        state.currentCam = camId;
+
+        // --- CORREÇÃO DO BUG DO FREDDY ---
+        // Primeiro atualizamos a visão para que ele apareça na tela
+        updateCamView();
+
+        // DEPOIS resetamos a posição dele no estado interno (Scare away logic)
+        if(state.ai.freddy === camId && state.ai.freddy !== 'DOOR') {
+            state.ai.freddy = '1A';
+        }
+        // ---------------------------------------------
+        
+        const overlay = document.getElementById('static-overlay');
+        overlay.style.transition = 'none';
+        overlay.style.opacity = "1.0"; 
+        
+        setTimeout(() => { 
+            overlay.style.transition = 'opacity 0.25s'; 
+            overlay.style.opacity = "0.15"; 
+        }, 120);
+
+        document.querySelectorAll('.cam-btn').forEach(btn => btn.classList.remove('active'));
+        const targetBtn = document.getElementById(`btn-${camId}`);
+        if(targetBtn) targetBtn.classList.add('active');
+        document.getElementById('cam-label').innerText = `CAM ${camId}`;
+
+        const foxyControls = document.getElementById('foxy-controls');
+        if(camId === '1C') {
+            foxyControls.style.display = 'flex';
+            updateFoxyStatus();
+        } else {
+            foxyControls.style.display = 'none';
+        }
+    }
+
+    function updateCamView() {
+        document.querySelectorAll('.cam-icon').forEach(icon => icon.style.display = 'none');
+        const current = state.currentCam;
+
+        if(state.ai.freddy === current && state.ai.freddy !== 'DOOR') {
+            document.getElementById('icon-freddy').style.display = 'block';
+        }
+
+        if(current === '1A') {
+            if(state.ai.bonnie === 'START') document.getElementById('icon-bonnie').style.display = 'block';
+            if(state.ai.chica === 'START') document.getElementById('icon-chica').style.display = 'block';
+        }
+
+        if(current === '1C' && state.ai.foxy > 0 && state.ai.foxy < 4) {
+             document.getElementById('icon-foxy').style.display = 'block';
+        }
+    }
+    
+    function resetFoxy() {
+        if(state.over || state.currentCam !== '1C') return;
+        state.ai.foxy = Math.max(0, state.ai.foxy - 2);
+        updateFoxyStatus();
+    }
+    
+    function updateFoxyStatus() {
+        const statusText = ["NO COVE (Dormindo)", "PEEKING (Espiando)", "READY (Pronto)", "LEAVING (Saindo)", "RUNNING! (CORRENDO!)"][state.ai.foxy];
+        document.getElementById('foxy-status-cam').innerText = statusText;
+    }
+
+    function loop() {
+        if(state.over) return;
+        let consumption = 0.015;
+        if(state.doors.l) consumption += 0.055;
+        if(state.doors.r) consumption += 0.055;
+        if(state.cam) consumption += 0.035;
+        state.p -= consumption;
+        document.getElementById('p-val').innerText = Math.max(0, Math.floor(state.p));
+        if(state.p <= 0) jumpscare('freddy');
+    }
+
+    function toggleD(s) {
+        if(state.over) return;
+        state.doors[s] = !state.doors[s];
+        Sfx.playDoor();
+        document.getElementById(`door-${s}`).classList.toggle('closed', state.doors[s]);
+        document.getElementById(`b-d-${s}`).classList.toggle('active-d', state.doors[s]);
+    }
+
+    function toggleL(s, on) {
+        if(state.over) return;
+        Sfx.playLight(on);
+        document.getElementById(`${s}-light`).style.opacity = on ? "1" : "0";
+        document.getElementById(`b-l-${s}`).classList.toggle('active-l', on);
+        if(s === 'l') document.getElementById('anim-bonnie').style.display = (on && state.ai.bonnie === 'DOOR') ? 'block' : 'none';
+        if(s === 'r') document.getElementById('anim-chica').style.display = (on && state.ai.chica === 'DOOR') ? 'block' : 'none';
+    }
+
+    function toggleC() {
+        if(state.over) return;
+        state.cam = !state.cam;
+        document.getElementById('monitor-toggle').innerText = state.cam ? "FECHAR MONITOR" : "ABRIR MONITOR";
+        document.getElementById('cam-overlay').style.display = state.cam ? 'block' : 'none';
+        if(state.cam) selectCam(state.currentCam);
+    }
+
+    function moveAI() {
+        if(state.over) return;
+        const checkMove = (lvl) => Math.random() * 20 < lvl;
+
+        if(checkMove(state.aiLevels.bonnie)) state.ai.bonnie = (state.ai.bonnie==='START'?'DOOR':'START');
+        if(checkMove(state.aiLevels.chica)) state.ai.chica = (state.ai.chica==='START'?'DOOR':'START');
+        
+        if (state.night > 1 || state.isCustom) {
+            if(state.ai.freddy !== 'DOOR' && checkMove(state.aiLevels.freddy)) {
+                const path = ['1A', '1B', '7', '6', '4A', '4B'];
+                let currentIndex = path.indexOf(state.ai.freddy);
+                if(currentIndex < path.length - 1) state.ai.freddy = path[currentIndex + 1];
+                else state.ai.freddy = 'DOOR';
+            }
+            if(!state.cam || state.currentCam !== '1C') {
+                if(checkMove(state.aiLevels.foxy)) {
+                    let oldFoxy = state.ai.foxy;
+                    state.ai.foxy = Math.min(4, state.ai.foxy + 1);
+                    if(oldFoxy < 4 && state.ai.foxy === 4) Sfx.playFoxyRun();
+                }
+            }
+        }
+        if(state.cam && state.currentCam === '1C') updateFoxyStatus();
+        checkAttacks();
+    }
+
+    function checkAttacks() {
+        const avgAI = (state.aiLevels.bonnie + state.aiLevels.chica) / 2;
+        const reactTime = Math.max(2250, 6000 - (avgAI * 200));
+        
+        if(state.ai.bonnie === 'DOOR' && !state.doors.l) setTimeout(() => { if(!state.doors.l && state.ai.bonnie === 'DOOR') jumpscare('bonnie'); }, reactTime);
+        if(state.ai.chica === 'DOOR' && !state.doors.r) setTimeout(() => { if(!state.doors.r && state.ai.chica === 'DOOR') jumpscare('chica'); }, reactTime);
+        if(state.ai.freddy === 'DOOR' && !state.doors.r && !state.cam) jumpscare('freddy');
+        
+        if(state.ai.foxy === 4) {
+            if(state.doors.l) { 
+                state.ai.foxy = 0; 
+                const drain = 1 + state.foxyHits;
+                state.p -= drain;
+                state.foxyHits++; 
+                Sfx.playDoor(); 
+            } 
+            else { jumpscare('foxy'); }
+        }
+    }
+
+    function jumpscare(who) {
+        if (state.over && state.gameStarted) return;
+        state.over = true; 
+        Sfx.playScare();
+        
+        const box = document.getElementById('scare-box');
+        
+        // Mapeamento de imagens: se você tiver outros links, substitua abaixo.
+        const animatronicImages = {
+            'chica': 'img/ChicaJ.png',
+            'freddy': 'img/FreddyJ.png', 
+            'bonnie': 'img/BonnieJ.png',
+            'foxy': 'img/FoxyJ.png'
+        };
+
+        const selectedImage = animatronicImages[who] || animatronicImages['chica'];
+
+        // Inserindo a imagem no HTML
+        box.innerHTML = `
+            <img src="${selectedImage}" 
+                style="width: 55%; height: auto; filter: drop-shadow(0 0 15px #f00);">
+        `;
+        
+        // Exibe a camada de susto
+        document.getElementById('jumpscare-layer').style.display = 'flex';
+        
+        // Reinicia o jogo após 2 segundos
+        setTimeout(() => location.reload(), 2000);
+    }
+
+    function win() { 
+        state.over = true; 
+        document.getElementById('win-msg').innerText = state.isCustom ? "CUSTOM NIGHT CONCLUÍDA!" : `VOCÊ SOBREVIVEU À NOITE ${state.night}`;
+        document.getElementById('win-screen').style.display = 'flex'; 
+        const nextBtn = document.getElementById('btn-next-night');
+        if(state.night === 5) {
+            nextBtn.style.display = 'block';
+            document.getElementById('win-msg').innerText = "5 NOITES CONCLUÍDAS! NOITE 6 LIBERADA!";
+            localStorage.setItem('fnaf_saved_night', 6);
+        } else if(state.night === 6) {
+            nextBtn.style.display = 'none';
+            document.getElementById('win-msg').innerText = "NOITE 6 CONCLUÍDA! CUSTOM NIGHT LIBERADA!";
+            localStorage.setItem('fnaf_saved_night', 7);
+        } else if(state.night >= 7) {
+            nextBtn.style.display = 'none';
+        } else {
+            nextBtn.style.display = 'block';
+            localStorage.setItem('fnaf_saved_night', state.night + 1);
+        }
+    }
+
+    function nextNight() {
+        if(state.night >= 6) return;
+        state.night++;
+        state.p = 100;
+        state.hour = 12;
+        state.over = false;
+        state.cam = false;
+        state.doors = {l:false, r:false};
+        state.ai = { bonnie: 'START', chica: 'START', freddy: '1A', foxy: 0 };
+        state.foxyHits = 0;
+        document.getElementById('win-screen').style.display = 'none';
+        document.getElementById('p-val').innerText = "100";
+        document.getElementById('clock-txt').innerText = "12 AM";
+        document.getElementById('night-txt').innerText = `Noite ${state.night}`;
+        document.getElementById('door-l').classList.remove('closed');
+        document.getElementById('door-r').classList.remove('closed');
+        document.getElementById('b-d-l').classList.remove('active-d');
+        document.getElementById('b-d-r').classList.remove('active-d');
+        document.getElementById('cam-overlay').style.display = 'none';
+        document.getElementById('monitor-toggle').innerText = "ABRIR MONITOR";
+        document.getElementById('l-light').style.opacity = "0";
+        document.getElementById('r-light').style.opacity = "0";
+    }
+</script>
+</body>
+</html>
