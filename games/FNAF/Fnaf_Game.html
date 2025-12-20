@@ -671,6 +671,136 @@
         document.getElementById('l-light').style.opacity = "0";
         document.getElementById('r-light').style.opacity = "0";
     }
+
+    // --- CHEAT CODE SYSTEM ---
+        let cheatCode = "";
+        const secret = "WEBFNAF";
+
+        window.addEventListener('keydown', (e) => {
+            cheatCode += e.key.toUpperCase();
+            if (cheatCode.length > secret.length) {
+                cheatCode = cheatCode.substr(cheatCode.length - secret.length);
+            }
+            if (cheatCode === secret) {
+                localStorage.setItem('fnaf_saved_night', 7);
+                
+                // Habilita os botões visualmente se estiver no menu
+                const btn6 = document.getElementById('btn-night6');
+                const btnC = document.getElementById('btn-custom');
+                const btnCont = document.getElementById('btn-continue');
+                
+                if(btn6) btn6.classList.remove('disabled');
+                if(btnC) btnC.classList.remove('disabled');
+                if(btnCont) {
+                    btnCont.classList.remove('disabled');
+                    btnCont.innerText = "Continuar (Noite 5)";
+                }
+
+                alert("CHEAT ATIVADO: Tudo desbloqueado!");
+                cheatCode = ""; // Reset
+            }
+        });
+
+    // --- PAUSE MENU SYSTEM ---
+    // 1. Create Pause Menu HTML dynamically
+    const pauseMenuHTML = `
+    <div id="pause-screen" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 30000; flex-direction: column; justify-content: center; align-items: center; pointer-events: auto;">
+        <h2 style="font-size: 60px; margin-bottom: 40px; color: #fff; text-shadow: 0 0 10px #fff;">PAUSADO</h2>
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <button class="menu-btn" onclick="togglePause()" style="text-align: center;">VOLTAR AO JOGO</button>
+            <button class="menu-btn" onclick="location.reload()" style="text-align: center;">VOLTAR AO MENU</button>
+        </div>
+    </div>`;
+    document.body.insertAdjacentHTML('beforeend', pauseMenuHTML);
+
+    let isPaused = false;
+    let gameLoopInterval, aiLoopInterval, clockLoopInterval;
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === "Escape" && state.gameStarted && !state.over) {
+            togglePause();
+        }
+    });
+
+    function togglePause() {
+        isPaused = !isPaused;
+        const pauseScreen = document.getElementById('pause-screen');
+        
+        if (isPaused) {
+            pauseScreen.style.display = 'flex';
+            // Stop Audio Context to pause sounds
+            if(Sfx.ctx.state === 'running') {
+                Sfx.ctx.suspend();
+            }
+        } else {
+            pauseScreen.style.display = 'none';
+            // Resume Audio Context
+            if(Sfx.ctx.state === 'suspended') {
+                Sfx.ctx.resume();
+            }
+        }
+    }
+
+    // Monkey-patching the loop functions to respect the pause state
+    const originalLoop = loop;
+    loop = function() {
+        if (isPaused) return;
+        originalLoop();
+    };
+
+    const originalMoveAI = moveAI;
+    moveAI = function() {
+        if (isPaused) return;
+        originalMoveAI();
+    };
+    
+    let realGameOverState = false;
+
+    // Re-implement togglePause to use this logic
+    togglePause = function() {
+        // If the game is genuinely over (win or jumpscare), do not allow pausing
+        if (realGameOverState) return;
+
+        isPaused = !isPaused;
+        const pauseScreen = document.getElementById('pause-screen');
+        
+        if (isPaused) {
+            // PAUSE
+            pauseScreen.style.display = 'flex';
+            if(Sfx.ctx.state === 'running') Sfx.ctx.suspend();
+            
+            // Set state.over to true to stop loops and interactions
+            state.over = true; 
+        } else {
+            // RESUME
+            pauseScreen.style.display = 'none';
+            if(Sfx.ctx.state === 'suspended') Sfx.ctx.resume();
+            
+            // Restore state.over to false to resume loops
+            state.over = false;
+        }
+    }
+
+    // We need to hook into `jumpscare` and `win` to set `realGameOverState`
+    const originalJumpscare = jumpscare;
+    jumpscare = function(who) {
+        realGameOverState = true;
+        originalJumpscare(who);
+    }
+
+    const originalWin = win;
+    win = function() {
+        realGameOverState = true;
+        originalWin();
+    }
+    
+    // Hook into startGame to reset realGameOverState
+    const originalStartGame = startGame;
+    startGame = function(night) {
+        realGameOverState = false;
+        isPaused = false;
+        originalStartGame(night);
+    }
 </script>
 </body>
 </html>
