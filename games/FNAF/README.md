@@ -160,6 +160,36 @@ Verificar frequentemente a Pirate Cove e manter controle da porta esquerda.
 
 ---
 
+## 🎮 Controles
+
+O jogo suporta **Mouse/Teclado** e **Controles (Gamepad)**.
+
+### ⌨️ Teclado & Mouse
+- **Mouse:** Interação completa com todos os elementos da interface.
+- **TAB:** Abrir / Fechar Monitor
+- **A:** Luz Esquerda
+- **S:** Porta Esquerda
+- **D:** Porta Direita
+- **F:** Luz Direita
+
+### 🎮 Gamepad (Xbox / PlayStation)
+O jogo detecta automaticamente controles conectados.
+
+| Botão (Xbox) | Botão (PS) | Ação |
+| :--- | :--- | :--- |
+| **A** | **X (Cross)** | Abrir / Fechar Monitor |
+| **B** | **O (Circle)** | Alternar Porta Direita |
+| **X** | **□ (Square)** | Alternar Porta Esquerda |
+| **Y** | **△ (Triangle)** | Ação Especial (Resetar Foxy na CAM 1C) |
+| **LB** | **L1** | Luz Esquerda |
+| **RB** | **R1** | Luz Direita |
+| **Start** | **Options** | Pausar Jogo |
+| **D-Pad Esq.** | **D-Pad Esq.** | Câmera Anterior |
+| **D-Pad Dir.** | **D-Pad Dir.** | Próxima Câmera |
+
+---
+
+
 ## 💾 Sistema de Salvamento
 
 - Progresso salvo automaticamente no navegador

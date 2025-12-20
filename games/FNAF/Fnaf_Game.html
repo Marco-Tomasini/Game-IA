@@ -842,6 +842,101 @@
                     break;
             }
         });
+
+        // --- SUPORTE A CONTROLE (GAMEPAD) ---
+            let gamepadIndex = null;
+            let prevButtons = {};
+            // Ordem de câmeras para navegação com D-Pad
+            const camOrder = ['1A', '1B', '1C', '5', '3', '2A', '2B', '4A', '4B', '6', '7'];
+
+            window.addEventListener("gamepadconnected", (e) => {
+                console.log("Gamepad conectado:", e.gamepad.id);
+                gamepadIndex = e.gamepad.index;
+                requestAnimationFrame(updateGamepad);
+            });
+
+            window.addEventListener("gamepaddisconnected", (e) => {
+                console.log("Gamepad desconectado");
+                if (gamepadIndex === e.gamepad.index) gamepadIndex = null;
+            });
+
+            function updateGamepad() {
+                if (gamepadIndex === null) return;
+                const gp = navigator.getGamepads()[gamepadIndex];
+                if (!gp) return;
+
+                // Helper para verificar botões
+                const isPressed = (idx) => gp.buttons[idx] && gp.buttons[idx].pressed;
+                const justPressed = (idx) => isPressed(idx) && !prevButtons[idx];
+
+                /* MAPEAMENTO PADRÃO (XBOX / PS):
+                   0: A / Cross       -> Monitor
+                   1: B / Circle      -> Porta Direita
+                   2: X / Square      -> Porta Esquerda
+                   3: Y / Triangle    -> Ação Especial (Resetar Foxy na CAM 1C)
+                   4: LB / L1         -> Luz Esquerda
+                   5: RB / R1         -> Luz Direita
+                   9: Start / Options -> Pause
+                   14: D-Pad Left     -> Câmera Anterior
+                   15: D-Pad Right    -> Próxima Câmera
+                */
+
+                // PAUSE (Start / Options)
+                // Só permite pausar se o jogo começou e não é Game Over real (Jumpscare/Win)
+                if (justPressed(9) && state.gameStarted && !realGameOverState) {
+                    togglePause();
+                }
+
+                // CONTROLES DE GAMEPLAY (Apenas se não estiver pausado e jogo rodando)
+                if (!isPaused && !state.over && state.gameStarted) {
+                    
+                    // MONITOR (A / Cross)
+                    if (justPressed(0)) toggleC();
+
+                    // PORTA ESQUERDA (X / Square)
+                    if (justPressed(2)) toggleD('l');
+
+                    // PORTA DIREITA (B / Circle)
+                    if (justPressed(1)) toggleD('r');
+
+                    // LUZ ESQUERDA (LB / L1) - Segurar para ligar
+                    if (isPressed(4) && !prevButtons[4]) toggleL('l', true);
+                    if (!isPressed(4) && prevButtons[4]) toggleL('l', false);
+
+                    // LUZ DIREITA (RB / R1) - Segurar para ligar
+                    if (isPressed(5) && !prevButtons[5]) toggleL('r', true);
+                    if (!isPressed(5) && prevButtons[5]) toggleL('r', false);
+
+                    // NAVEGAÇÃO DE CÂMERAS (D-Pad)
+                    if (state.cam) {
+                        if (justPressed(14)) cycleCam(-1); // Esquerda
+                        if (justPressed(15)) cycleCam(1);  // Direita
+                        
+                        // AÇÃO ESPECIAL (Y / Triangle) - Resetar Foxy se estiver na CAM 1C
+                        if (state.currentCam === '1C' && justPressed(3)) {
+                            resetFoxy();
+                        }
+                    }
+                }
+
+                // Atualiza estado dos botões para o próximo frame
+                for (let i = 0; i < gp.buttons.length; i++) {
+                    prevButtons[i] = gp.buttons[i].pressed;
+                }
+
+                requestAnimationFrame(updateGamepad);
+            }
+
+            function cycleCam(dir) {
+                const idx = camOrder.indexOf(state.currentCam);
+                if (idx === -1) return;
+                
+                let newIdx = idx + dir;
+                if (newIdx < 0) newIdx = camOrder.length - 1;
+                if (newIdx >= camOrder.length) newIdx = 0;
+                
+                selectCam(camOrder[newIdx]);
+            }
 </script>
 </body>
 </html>
