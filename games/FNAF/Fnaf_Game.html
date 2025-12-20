@@ -324,19 +324,23 @@
             const f = this.ctx.createBiquadFilter();
             f.type = "lowpass"; f.frequency.setValueAtTime(400, this.ctx.currentTime);
             f.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + 0.25);
-            const g = this.ctx.createGain(); g.gain.value = 1.0;
+            const g = this.ctx.createGain(); g.gain.value = 1.5;
             s.connect(f); f.connect(g); g.connect(this.ctx.destination); s.start();
         },
 
         playLight(on) {
             if(on) {
+                if (this.lOsc) return;
                 this.lOsc = this.ctx.createOscillator();
                 this.lGain = this.ctx.createGain();
                 this.lOsc.type = 'square'; this.lOsc.frequency.value = 55;
-                this.lGain.gain.value = 0.03;
+                this.lGain.gain.value = 0.05;
                 this.lOsc.connect(this.lGain); this.lGain.connect(this.ctx.destination);
                 this.lOsc.start();
-            } else if(this.lOsc) { try { this.lOsc.stop(); } catch(e){} }
+            } else if(this.lOsc) { 
+                try { this.lOsc.stop(); } catch(e){} 
+                this.lOsc = null;
+            }
         }
     };
 
@@ -801,6 +805,43 @@
         isPaused = false;
         originalStartGame(night);
     }
+
+    // --- CONTROLES DE TECLADO ---
+        window.addEventListener('keydown', (e) => {
+            if (state.over || isPaused) return; // Não faz nada se o jogo acabou ou está pausado
+
+            switch(e.key.toLowerCase()) {
+                case 'tab':
+                    e.preventDefault(); // Evita mudar o foco do navegador
+                    toggleC();
+                    break;
+                case 'a':
+                    toggleL('l', true);
+                    break;
+                case 's':
+                    toggleD('l');
+                    break;
+                case 'd':
+                    toggleD('r');
+                    break;
+                case 'f':
+                    toggleL('r', true);
+                    break;
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (state.over || isPaused) return;
+
+            switch(e.key.toLowerCase()) {
+                case 'a':
+                    toggleL('l', false);
+                    break;
+                case 'f':
+                    toggleL('r', false);
+                    break;
+            }
+        });
 </script>
 </body>
 </html>
