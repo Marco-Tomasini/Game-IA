@@ -265,6 +265,103 @@
 
         #notification.show { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
         #notification h2 { margin: 0 0 10px 0; color: var(--xbox-green-light); }
+
+        @media (max-width: 700px) {
+            :root {
+                --card-width: min(68vw, 240px);
+                --card-height: calc(var(--card-width) * 1.38);
+            }
+
+            .top-bar {
+                padding: 12px 16px;
+                gap: 12px;
+                font-size: 10px;
+            }
+
+            .top-bar > div:last-child {
+                display: none;
+            }
+
+            .stats {
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+            .stat-item {
+                gap: 5px;
+            }
+
+            .stat-item span {
+                min-width: auto;
+            }
+
+            .bar {
+                width: 34px;
+            }
+
+            .viewport {
+                margin-top: -20px;
+                overflow: hidden;
+                perspective: 900px;
+            }
+
+            .game-info {
+                bottom: 84px;
+                width: calc(100vw - 32px);
+            }
+
+            .game-title {
+                max-width: 100%;
+                padding: 8px 20px;
+                font-size: 1rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .bottom-bar {
+                height: 70px;
+                padding: 0 16px;
+            }
+
+            .controls {
+                gap: 10px;
+            }
+
+            .btn {
+                gap: 6px;
+                font-size: 13px;
+            }
+
+            #clock {
+                font-size: 16px;
+                letter-spacing: 1px;
+            }
+
+            .details-card {
+                width: calc(100vw - 24px);
+                max-height: calc(100vh - 24px);
+                flex-direction: column;
+                overflow-y: auto;
+            }
+
+            .details-left {
+                width: 100%;
+                height: 220px;
+                border-right: none;
+                border-bottom: 2px solid var(--xbox-green);
+            }
+
+            .details-right {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            #clock {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -334,10 +431,16 @@
                 synopsis: "Você é o segurança noturno em uma pizzaria assombrada por códigos mal escritos. Sobreviva até as 6 da manhã enquanto animações CSS ganham vida própria.",
                 totalSeconds: 0
             },
+            {
+                id: "ai_test",
+                name: "AI_TEST Mario Lab",
+                img: "img/Capa_AI_TEST.png",
+                synopsis: "Projeto de comparação de resultados de sites: diferentes modelos receberam o mesmo prompt para gerar versões Web Mario. Abra o laboratório para comparar cada resultado lado a lado.",
+                totalSeconds: 0
+            },
             { id: "soon2", name: "EM BREVE", img: "", synopsis: "Jogo em desenvolvimento.", totalSeconds: 0 },
             { id: "soon2", name: "EM BREVE", img: "", synopsis: "Jogo em desenvolvimento.", totalSeconds: 0 },
-            { id: "soon1", name: "EM BREVE", img: "", synopsis: "Jogo em desenvolvimento.", totalSeconds: 0 },
-            { id: "soon2", name: "EM BREVE", img: "", synopsis: "Jogo em desenvolvimento.", totalSeconds: 0 }
+            { id: "soon1", name: "EM BREVE", img: "", synopsis: "Jogo em desenvolvimento.", totalSeconds: 0 }
         ];
 
         let currentIndex = 0;
@@ -397,6 +500,8 @@
             setTimeout(() => {
                 if (game.id === "fnaf") {
                     window.location.href = "games/FNAF/Fnaf_Game.html";
+                } else if (game.id === "ai_test") {
+                    window.location.href = "games/AI_TEST/index.html";
                 } else {
                     console.log("Jogo não configurado para inicialização: " + game.name);
                 }
@@ -413,7 +518,11 @@
             document.getElementById('det-title').innerText = game.name;
             document.getElementById('det-synopsis').innerText = game.synopsis;
             document.getElementById('det-time').innerText = formatTime(game.totalSeconds);
-            document.getElementById('det-img').style.backgroundImage = `url('${game.img}')`;
+            const detailImage = document.getElementById('det-img');
+            detailImage.className = 'details-left';
+            detailImage.innerHTML = "";
+            detailImage.style.backgroundImage = game.img ? `url('${game.img}')` : "";
+            detailImage.style.backgroundColor = '#222';
             
             detailsOverlay.classList.add('active');
             document.querySelector('.carousel').style.opacity = "0.2";
@@ -432,7 +541,7 @@
             games.forEach((game, index) => {
                 const card = document.createElement('div');
                 card.className = 'card';
-                card.style.backgroundImage = `url('${game.img}')`;
+                card.style.backgroundImage = game.img ? `url('${game.img}')` : "";
                 card.style.backgroundColor = '#222';
                 card.addEventListener('click', () => {
                     if(currentIndex === index) showDetails();
@@ -444,20 +553,23 @@
 
         function updateCarousel() {
             const cards = document.querySelectorAll('.card');
+            const isNarrow = window.innerWidth <= 700;
+            const activeDepth = isNarrow ? 80 : 200;
+            const spacing = isNarrow ? 112 : 160;
+            const sideShift = isNarrow ? 46 : 80;
             gameNameDisplay.innerText = games[currentIndex].name;
             cards.forEach((card, index) => {
                 const offset = index - currentIndex;
                 if (offset === 0) {
                     card.className = 'card active';
-                    card.style.transform = `translateX(0) translateZ(200px) rotateY(0deg)`;
+                    card.style.transform = `translateX(0) translateZ(${activeDepth}px) rotateY(0deg)`;
                     card.style.opacity = "1";
                     card.style.filter = "brightness(1.1)";
                 } else {
                     card.className = 'card';
                     const direction = offset > 0 ? 1 : -1;
-                    const spacing = 160; 
                     const rotateY = direction * -50; 
-                    const translateX = (offset * spacing) + (direction * 80);
+                    const translateX = (offset * spacing) + (direction * sideShift);
                     card.style.transform = `translateX(${translateX}px) translateZ(0px) rotateY(${rotateY}deg)`;
                     card.style.opacity = Math.max(0.1, 1 - Math.abs(offset) * 0.35);
                     card.style.filter = `brightness(${0.6 - Math.abs(offset) * 0.1})`;
@@ -496,6 +608,12 @@
             if (key === 'enter' || key === 'a') btnA_Action();
             else if (key === 'escape' || key === 'backspace' || key === 'b') btnB_Action();
             else if (key === 'x') showDetails();
+        });
+
+        let resizeFrame;
+        window.addEventListener('resize', () => {
+            cancelAnimationFrame(resizeFrame);
+            resizeFrame = requestAnimationFrame(updateCarousel);
         });
 
         function updateClock() {

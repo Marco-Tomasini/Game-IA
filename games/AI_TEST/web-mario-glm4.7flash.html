@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Mario Galaxy: O Filme | Experiência Lvl99</title>
+    
+    <!-- Importando fontes divertidas e modernas -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600&family=Poppins:wght@300;500;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- VARIÁVEIS E RESET --- */
+        :root {
+            --mario-red: #E70012;
+            --mario-blue: #0055AA;
+            --luigi-green: #6BCB77;
+            --peach-pink: #FFCCD9;
+            --star-yellow: #FFD700;
+            --cosmos-dark: #05070a;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --font-head: 'Fredoka', sans-serif;
+            --font-body: 'Poppins', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--cosmos-dark);
+            color: white;
+            font-family: var(--font-body);
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at 50% 50%, #1a1f35 0%, #000000 100%);
+        }
+
+        /* --- UTILITÁRIOS --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: inline-block;
+            cursor: pointer;
+            border: none;
+            font-family: var(--font-head);
+        }
+
+        .btn-primary {
+            background: var(--mario-red);
+            color: white;
+            box-shadow: 0 4px 15px rgba(231, 0, 18, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05) translateY(-2px);
+            background: #ff1e42;
+            box-shadow: 0 8px 25px rgba(231, 0, 18, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid white;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: black;
+        }
+
+        h2 {
+            font-family: var(--font-head);
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            background: linear-gradient(90deg, #fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* --- NAVEGAÇÃO --- */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 0;
+            z-index: 1000;
+            background: rgba(5, 7, 10, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: var(--font-head);
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--star-yellow);
+            text-shadow: 0 0 10px var(--star-yellow);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--mario-red);
+        }
+
+        /* --- HERO SECTION (CANVAS BG) --- */
+        header {
+            height: 100vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #star-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            max-width: 800px;
+            padding: 20px;
+            animation: floatHero 6s ease-in-out infinite;
+        }
+
+        .hero-tagline {
+            font-family: var(--font-head);
+            font-size: 1.2rem;
+            color: var(--luigi-green);
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .hero-title {
+            font-family: var(--font-head);
+            font-size: 5rem;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .hero-title span {
+            color: var(--mario-red);
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        .hero-desc {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* --- GALAXY EXPLORER (INTERACTIVE) --- */
+        .galaxy-explorer {
+            padding: 100px 0;
+            position: relative;
+        }
+
+        /* Simula um sistema solar 3D */
+        .solar-system {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+            overflow: hidden;
+        }
+
+        .sun {
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, #ffd700 20%, #ff8c00 100%);
+            border-radius: 50%;
+            position: absolute;
+            z-index: 10;
+            box-shadow: 0 0 60px #ff8c00;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .sun:hover {
+            transform: scale(1.1);
+        }
+
+        .orbit {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: rotate linear infinite;
+        }
+
+        .orbit.paused {
+            animation-play-state: paused;
+        }
+
+        .planet {
+            position: absolute;
+            top: 50%;
+            right: 0;
+            transform: translate(50%, -50%);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: box-shadow 0.3s;
+        }
+
+        .planet:hover {
+            box-shadow: 0 0 20px white;
+            transform: translate(50%, -50%) scale(1.2);
+        }
+
+        /* Planetas customizados */
+        .orbit-1 { width: 300px; height: 300px; animation-duration: 10s; }
+        .planet-1 { width: 40px; height: 40px; background: #4facfe; }
+
+        .orbit-2 { width: 450px; height: 450px; animation-duration: 15s; animation-direction: reverse; }
+        .planet-2 { width: 60px; height: 60px; background: #00f260; }
+
+        .orbit-3 { width: 600px; height: 600px; animation-duration: 25s; }
+        .planet-3 { width: 30px; height: 30px; background: #ff9a9e; }
+
+        .info-panel {
+            margin-top: 30px;
+            padding: 20px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+            text-align: center;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .info-panel h3 {
+            color: var(--peach-pink);
+            margin-bottom: 10px;
+        }
+
+        /* --- PERSONAGENS (3D TILT) --- */
+        .characters-section {
+            padding: 100px 0;
+            background: linear-gradient(180deg, transparent, rgba(231, 0, 18, 0.05));
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .char-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.1s; /* Smooth follow */
+            transform-style: preserve-3d;
+            height: 350px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .char-img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            transition: transform 0.3s;
+        }
+
+        .char-name {
+            font-family: var(--font-head);
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .char-role {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 15px;
+        }
+
+        /* --- STAR CATCHER GAME --- */
+        .game-section {
+            padding: 80px 0;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .game-container {
+            position: relative;
+            height: 400px;
+            background: radial-gradient(circle, #1a1f35 0%, #000 70%);
+            border-radius: 20px;
+            border: 2px solid var(--glass-border);
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: crosshair;
+        }
+
+        .star {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: var(--star-yellow);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            animation: twinkle 1s infinite alternate;
+            cursor: pointer;
+        }
+
+        .star:active {
+            transform: scale(0);
+            transition: transform 0.2s;
+        }
+
+        .score-board {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: var(--font-head);
+            font-size: 1.5rem;
+            color: var(--star-yellow);
+            z-index: 10;
+        }
+
+        /* --- TRAILER MODAL --- */
+        .trailer-section {
+            padding: 100px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .trailer-card {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            cursor: pointer;
+            aspect-ratio: 16/9;
+            background: #000;
+            border: 1px solid var(--glass-border);
+            group: hover;
+        }
+
+        .trailer-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        .trailer-card:hover .trailer-thumb {
+            opacity: 0.4;
+        }
+
+        .play-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s;
+            border: 2px solid white;
+        }
+
+        .play-btn::after {
+            content: '';
+            display: block;
+            width: 0;
+            height: 0;
+            border-left: 25px solid white;
+            border-top: 15px solid transparent;
+            border-bottom: 15px solid transparent;
+            margin-left: 5px;
+        }
+
+        .trailer-card:hover .play-btn {
+            background: var(--mario-red);
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            width: 90%;
+            max-width: 900px;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .video-frame {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+            font-family: var(--font-head);
+            border: 2px solid var(--mario-blue);
+            border-radius: 10px;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            background: #000;
+            padding: 50px 0;
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .footer-logo {
+            font-family: var(--font-head);
+            font-size: 2rem;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        /* --- ANIMAÇÕES --- */
+        @keyframes floatHero {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); filter: drop-shadow(0 0 5px var(--mario-red)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 15px var(--mario-red)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 5px var(--mario-red)); }
+        }
+
+        @keyframes rotate {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        @keyframes twinkle {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(1.2); opacity: 1; }
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .hero-title { font-size: 3rem; }
+            .orbit-1 { width: 200px; height: 200px; }
+            .orbit-2 { width: 300px; height: 300px; }
+            .orbit-3 { width: 400px; height: 400px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navegação -->
+    <nav>
+        <div class="container nav-content">
+            <div class="logo">MARIO GALAXY <span style="font-size: 0.8em; color: var(--mario-blue);">MOVIE</span></div>
+            <div class="nav-links">
+                <a href="#history">História</a>
+                <a href="#galaxy-map">Mapa</a>
+                <a href="#characters">Personagens</a>
+                <a href="#game">Jogar</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header>
+        <canvas id="star-canvas"></canvas>
+        <div class="hero-content">
+            <div class="hero-tagline">APRESENTAÇÃO OFICIAL</div>
+            <h1 class="hero-title">SUPER MARIO <span>GALAXY</span></h1>
+            <p class="hero-desc">Aventura cósmica sem precedentes. A Nintendo traz a magia da galáxia para a grande tela em uma história épica de coragem, amizade e estrelas.</p>
+            <a href="#trailer" class="btn btn-primary">Ver Trailer</a>
+            <a href="#game" class="btn btn-secondary" style="margin-left: 10px;">Coletar Estrelas</a>
+        </div>
+    </header>
+
+    <!-- História / Intro -->
+    <section id="history" style="padding: 80px 0; text-align: center;">
+        <div class="container">
+            <h2>A Jornada Cósmica</h2>
+            <p style="max-width: 700px; margin: 0 auto; line-height: 1.6;">
+                Quando uma estranha força cósmica ameaça a galáxia, Mario e Luigi precisam viajar através de planetas flutuantes, coletar Power Stars e restaurar o equilíbrio do universo. Prepare-se para pular em grãos de areia e deslizar em vulcões gelados!
+            </p>
+        </div>
+    </section>
+
+    <!-- Galáxia Interativa -->
+    <section id="galaxy-map" class="galaxy-explorer">
+        <div class="container">
+            <h2>Explorador de Planetas</h2>
+            <div class="solar-system">
+                <div class="sun" onclick="showInfo('O Sol Central', 'O núcleo da galáxia. Protegido pela Princesa Peach, este é o lar da coragem.')" title="Clique para ver info"></div>
+                
+                <div class="orbit orbit-1" id="orbit1">
+                    <div class="planet planet-1" onclick="showInfo('Planetário da Neblina', 'Um planeta coberto por nuvens espaciais densas. Muitos segredos estão escondidos aqui.')" title="Clique para ver info"></div>
+                </div>
+                
+                <div class="orbit orbit-2" id="orbit2">
+                    <div class="planet planet-2" onclick="showInfo('Mundo Flutuante', 'Grãos de areia formam estruturas gigantes. A física aqui é diferente!')" title="Clique para ver info"></div>
+                </div>
+                
+                <div class="orbit orbit-3" id="orbit3">
+                    <div class="planet planet-3" onclick="showInfo('Vulcão Lava-Lava', 'Um planeta ativo onde o Mario precisa ter cuidado com as rochas vulcânicas!')" title="Clique para ver info"></div>
+                </div>
+            </div>
+            <div class="info-panel" id="planet-info">
+                <p>Clique em qualquer planeta para descobrir suas características!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Personagens 3D -->
+    <section id="characters" class="characters-section">
+        <div class="container">
+            <h2>Equipe do Universo</h2>
+            <div class="card-grid">
+                <!-- Mario -->
+                <article class="char-card" onmousemove="handleTilt(event)" onmouseleave="resetTilt(this)">
+                    <img src="https://picsum.photos/seed/mariogalaxy/300/300" alt="Mario" class="char-img">
+                    <h3 class="char-name">Mario</h3>
+                    <p class="char-role">O Heroi</p>
+                    <p style="font-size: 0.9rem; color: #ccc;">Com sua caneca de chocolate e casco azulado, Mario está pronto para qualquer desafio galáctico.</p>
+                </article>
+
+                <!-- Luigi -->
+                <article class="char-card" onmousemove="handleTilt(event)" onmouseleave="resetTilt(this)">
+                    <img src="https://picsum.photos/seed/luigi/300/300" alt="Luigi" class="char-img">
+                    <h3 class="char-name">Luigi</h3>
+                    <p class="char-role">O Misterioso</p>
+                    <p style="font-size: 0.9rem; color: #ccc;">Embora menor, Luigi possui um pulo aéreo incrível e muita coragem para salvar o irmão.</p>
+                </article>
+
+                <!-- Peach -->
+                <article class="char-card" onmousemove="handleTilt(event)" onmouseleave="resetTilt(this)">
+                    <img src="https://picsum.photos/seed/peach/300/300" alt="Princesa Peach" class="char-img">
+                    <h3 class="char-name">Princesa Peach</h3>
+                    <p class="char-role">A Guardiã</p>
+                    <p style="font-size: 0.9rem; color: #ccc;">Com sua bondade ilimitada, ela guia Mario através dos domínios estelares.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Game: Star Catcher -->
+    <section id="game" class="game-section">
+        <div class="container">
+            <h2>Mini-Game: Captura Estelar</h2>
+            <p style="margin-bottom: 20px;">Clique nas estrelas para coletar pontos de energia antes que elas desapareçam!</p>
+            <div class="game-container" id="game-area">
+                <div class="score-board">Estrelas: <span id="score">0</span></div>
+            </div>
+            <button class="btn btn-secondary" onclick="resetGame()" style="margin-top: 20px; font-size: 0.8rem;">Reiniciar Zona</button>
+        </div>
+    </section>
+
+    <!-- Trailer -->
+    <section id="trailer" class="trailer-section">
+        <div class="container">
+            <h2>O Trailer Oficial</h2>
+            <div class="trailer-card" onclick="openModal()">
+                <img src="https://picsum.photos/seed/spacecinema/800/450" alt="Trailer Poster" class="trailer-thumb">
+                <div class="play-btn"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Trailer -->
+    <div class="modal-overlay" id="video-modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div class="video-frame">
+                <!-- Simulação de Player de Vídeo -->
+                <div style="text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">🎬</div>
+                    <h3>Trailer do Filme</h3>
+                    <p style="color: #aaa;">(Aqui entraria o vídeo do YouTube)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-logo">MARIO GALAXY</div>
+            <p>&copy; 2023 Nintendo Fan Project. Design Referencial Lvl99.</p>
+            <div style="margin-top: 10px; font-size: 0.8rem; color: #555;">
+                As imagens são ilustrativas para fins de demonstração técnica.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        /* --- 1. CANVAS STARFIELD BACKGROUND --- */
+        const canvas = document.getElementById('star-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let stars = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        class Star {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * 2;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.opacity = Math.random();
+                this.blinkSpeed = Math.random() * 0.02 + 0.005;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                // Blink effect
+                this.opacity += this.blinkSpeed;
+                if (this.opacity > 1 || this.opacity < 0.2) {
+                    this.blinkSpeed = -this.blinkSpeed;
+                }
+
+                // Wrap around screen
+                if (this.x < 0) this.x = width;
+                if (this.x > width) this.x = 0;
+                if (this.y < 0) this.y = height;
+                if (this.y > height) this.y = 0;
+            }
+
+            draw() {
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initStars() {
+            stars = [];
+            for (let i = 0; i < 200; i++) {
+                stars.push(new Star());
+            }
+        }
+
+        function animateStars() {
+            ctx.clearRect(0, 0, width, height);
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+            requestAnimationFrame(animateStars);
+        }
+
+        window.addEventListener('resize', () => { resize(); initStars(); });
+        resize();
+        initStars();
+        animateStars();
+
+        /* --- 2. INTERACTIVE GALAXY MAP --- */
+        const orbits = document.querySelectorAll('.orbit');
+        const infoPanel = document.getElementById('planet-info');
+
+        function showInfo(title, desc) {
+            infoPanel.style.opacity = 0;
+            setTimeout(() => {
+                infoPanel.innerHTML = `<h3>${title}</h3><p>${desc}</p>`;
+                infoPanel.style.opacity = 1;
+            }, 200);
+            
+            // Pause animation on hover
+            orbits.forEach(o => o.classList.add('paused'));
+            setTimeout(() => orbits.forEach(o => o.classList.remove('paused')), 2000);
+        }
+
+        /* --- 3. 3D CARD TILT EFFECT --- */
+        function handleTilt(e) {
+            const card = e.currentTarget;
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            const rotateX = ((y - centerY) / centerY) * -10; // Max 10deg
+            const rotateY = ((x - centerX) / centerX) * 10;
+
+            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        }
+
+        function resetTilt(card) {
+            card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0)';
+        }
+
+        /* --- 4. STAR CATCHER GAME --- */
+        const gameArea = document.getElementById('game-area');
+        const scoreEl = document.getElementById('score');
+        let score = 0;
+
+        function spawnStar() {
+            if (gameArea.children.length > 10) return; // Limit max stars
+
+            const star = document.createElement('div');
+            star.classList.add('star');
+            
+            // Random position
+            const x = Math.random() * (gameArea.clientWidth - 40);
+            const y = Math.random() * (gameArea.clientHeight - 40);
+            
+            star.style.left = `${x}px`;
+            star.style.top = `${y}px`;
+
+            star.onclick = function() {
+                score++;
+                scoreEl.innerText = score;
+                this.remove();
+                // Add burst effect
+                createBurst(x, y);
+            };
+
+            gameArea.appendChild(star);
+
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                if(star.parentNode) star.remove();
+            }, 3000);
+        }
+
+        function createBurst(x, y) {
+            // Simple visual feedback for click
+            const burst = document.createElement('div');
+            burst.style.position = 'absolute';
+            burst.style.left = x + 'px';
+            burst.style.top = y + 'px';
+            burst.style.width = '10px';
+            burst.style.height = '10px';
+            burst.style.background = 'white';
+            burst.style.borderRadius = '50%';
+            burst.style.pointerEvents = 'none';
+            burst.style.animation = 'twinkle 0.5s forwards';
+            gameArea.appendChild(burst);
+            setTimeout(() => burst.remove(), 500);
+        }
+
+        // Spawn interval
+        setInterval(spawnStar, 800);
+
+        function resetGame() {
+            score = 0;
+            scoreEl.innerText = score;
+            // Clear existing stars except the score board
+            const stars = document.querySelectorAll('.star');
+            stars.forEach(s => s.remove());
+        }
+
+        /* --- 5. MODAL TRAILER --- */
+        const modal = document.getElementById('video-modal');
+
+        function openModal() {
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+        }
+
+        // Close on outside click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+    </script>
+</body>
+</html>

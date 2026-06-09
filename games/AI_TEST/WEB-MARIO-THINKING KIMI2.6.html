@@ -1,0 +1,1847 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Super Mario Galaxy Movie (2026) | Site Oficial</title>
+    <meta name="description" content="Mario, Luigi e amigos embarcam em uma aventura galáctica. Nos cinemas 1º de abril de 2026.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --deep-space: #0B0D17;
+            --nebula-purple: #6B2D5C;
+            --star-gold: #FFD700;
+            --luma-blue: #4ECDC4;
+            --mario-red: #E52521;
+            --luigi-green: #43B047;
+            --cosmic-pink: #FF6B9D;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--deep-space);
+            color: white;
+            font-family: 'Space Grotesk', sans-serif;
+            overflow-x: hidden;
+            cursor: none;
+        }
+
+        .font-orbitron { font-family: 'Orbitron', monospace; }
+
+        /* Custom Cursor - Star Bit */
+        #custom-cursor {
+            position: fixed;
+            width: 24px;
+            height: 24px;
+            pointer-events: none;
+            z-index: 99999;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s ease;
+        }
+
+        .star-bit-cursor {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #FFD700 0%, #FFA500 50%, transparent 70%);
+            border-radius: 50%;
+            box-shadow: 0 0 20px #FFD700, 0 0 40px #FFA500;
+            animation: starBitPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes starBitPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.8; }
+        }
+
+        /* Starfield Canvas */
+        #starfield-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-strong {
+            background: rgba(11, 13, 23, 0.8);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        /* Neon Glow */
+        .neon-gold {
+            text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700, 0 0 40px #FFA500;
+        }
+
+        .neon-blue {
+            text-shadow: 0 0 10px #4ECDC4, 0 0 20px #4ECDC4;
+        }
+
+        /* Holographic Effect */
+        .holographic {
+            background: linear-gradient(135deg, 
+                rgba(255,0,0,0.1) 0%, 
+                rgba(0,255,0,0.1) 25%, 
+                rgba(0,0,255,0.1) 50%, 
+                rgba(255,0,255,0.1) 75%, 
+                rgba(255,255,0,0.1) 100%);
+            background-size: 400% 400%;
+            animation: holographicShift 3s ease infinite;
+        }
+
+        @keyframes holographicShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 3D Card */
+        .card-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .card-3d:hover {
+            transform: rotateY(10deg) rotateX(5deg) scale(1.05);
+        }
+
+        .card-inner {
+            transform-style: preserve-3d;
+            backface-visibility: hidden;
+        }
+
+        /* Warp Pipe Transition */
+        .warp-pipe {
+            position: fixed;
+            width: 120px;
+            height: 0;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(90deg, #00aa00 0%, #00dd00 30%, #00aa00 100%);
+            border: 4px solid #006600;
+            border-radius: 60px 60px 0 0;
+            z-index: 1000;
+            transition: height 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            overflow: hidden;
+        }
+
+        .warp-pipe.active {
+            height: 100vh;
+        }
+
+        .warp-pipe::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: linear-gradient(90deg, #006600 0%, #008800 50%, #006600 100%);
+            border-radius: 60px 60px 0 0;
+        }
+
+        /* Luma Companion */
+        #luma-companion {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            z-index: 9999;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .luma-body {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 30%, #FFF8DC 0%, #FFD700 40%, #FFA500 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6), inset -10px -10px 20px rgba(255, 140, 0, 0.3);
+            position: relative;
+            animation: lumaFloat 3s ease-in-out infinite;
+        }
+
+        .luma-body::before,
+        .luma-body::after {
+            content: '';
+            position: absolute;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+        }
+
+        .luma-body::before {
+            width: 12px;
+            height: 12px;
+            top: 18px;
+            left: 16px;
+        }
+
+        .luma-body::after {
+            width: 12px;
+            height: 12px;
+            top: 18px;
+            right: 16px;
+        }
+
+        .luma-star {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #FFD700;
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: lumaStarSpin 2s linear infinite;
+        }
+
+        @keyframes lumaFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-15px) rotate(5deg); }
+            75% { transform: translateY(-10px) rotate(-5deg); }
+        }
+
+        @keyframes lumaStarSpin {
+            from { transform: translateX(-50%) rotate(0deg); }
+            to { transform: translateX(-50%) rotate(360deg); }
+        }
+
+        /* Star Bit Collectible */
+        .star-bit {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, #FFD700 0%, #FF8C00 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 15px #FFD700;
+            cursor: pointer;
+            z-index: 100;
+            animation: starBitFloat 2s ease-in-out infinite;
+            transition: transform 0.3s ease;
+        }
+
+        .star-bit:hover {
+            transform: scale(1.5);
+        }
+
+        @keyframes starBitFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Constellation Canvas */
+        #constellation-canvas {
+            border-radius: 20px;
+            cursor: crosshair;
+        }
+
+        /* Galaxy Card */
+        .galaxy-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 24px;
+            transition: all 0.5s ease;
+        }
+
+        .galaxy-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.8) 100%);
+            z-index: 1;
+        }
+
+        .galaxy-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(78, 205, 196, 0.3);
+        }
+
+        .galaxy-card:hover .galaxy-planet {
+            transform: scale(1.2) rotate(10deg);
+        }
+
+        .galaxy-planet {
+            transition: transform 0.8s ease;
+        }
+
+        /* Progress Bar Star Style */
+        .star-progress {
+            height: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .star-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FFD700, #FFA500);
+            border-radius: 15px;
+            transition: width 2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .star-progress-fill::after {
+            content: '⭐';
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+        }
+
+        /* Text Scramble Effect */
+        .scramble-text {
+            display: inline-block;
+        }
+
+        /* Gravity Flip Section */
+        .gravity-section {
+            transition: transform 1s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .gravity-flip {
+            transform: rotate(180deg);
+        }
+
+        /* Character Aura */
+        .character-aura {
+            position: absolute;
+            inset: -20px;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            filter: blur(20px);
+        }
+
+        .card-3d:hover .character-aura {
+            opacity: 0.6;
+        }
+
+        /* Particle Trail */
+        .particle-trail {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #FFD700;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: trailFade 1s ease-out forwards;
+        }
+
+        @keyframes trailFade {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body { cursor: auto; }
+            #custom-cursor { display: none; }
+            .card-3d:hover { transform: none; }
+        }
+
+        /* Scrollbar Custom */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--deep-space);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #FFD700, #4ECDC4);
+            border-radius: 5px;
+        }
+
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--deep-space);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 1s ease, visibility 1s ease;
+        }
+
+        #loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loading-star {
+            width: 80px;
+            height: 80px;
+            background: #FFD700;
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            animation: loadingSpin 2s linear infinite;
+        }
+
+        @keyframes loadingSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Bowser Jr Alert */
+        #bowser-alert {
+            position: fixed;
+            top: 20px;
+            right: -400px;
+            width: 350px;
+            background: linear-gradient(135deg, #E52521, #8B0000);
+            border: 3px solid #FFD700;
+            border-radius: 20px;
+            padding: 20px;
+            z-index: 9998;
+            transition: right 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 10px 40px rgba(229, 37, 33, 0.5);
+        }
+
+        #bowser-alert.show {
+            right: 20px;
+        }
+
+        /* Mini Game */
+        #mini-game-canvas {
+            border-radius: 15px;
+            border: 2px solid #FFD700;
+        }
+
+        /* Tooltip */
+        .cosmic-tooltip {
+            position: absolute;
+            background: rgba(11, 13, 23, 0.95);
+            border: 1px solid #FFD700;
+            border-radius: 12px;
+            padding: 15px;
+            max-width: 300px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .cosmic-tooltip.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Audio Visualizer Bars */
+        .audio-bar {
+            width: 4px;
+            background: linear-gradient(to top, #4ECDC4, #FFD700);
+            border-radius: 2px;
+            animation: audioWave 0.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes audioWave {
+            from { height: 10px; }
+            to { height: 40px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-star mb-8"></div>
+        <h2 class="font-orbitron text-3xl font-bold text-yellow-400 neon-gold mb-4">CARREGANDO GALÁXIA...</h2>
+        <div class="w-64 h-2 bg-gray-800 rounded-full overflow-hidden">
+            <div id="loading-bar" class="h-full bg-gradient-to-r from-yellow-400 to-cyan-400 rounded-full" style="width: 0%"></div>
+        </div>
+        <p id="loading-text" class="mt-4 text-cyan-400 text-sm">Coletando Star Bits...</p>
+    </div>
+
+    <!-- Custom Cursor -->
+    <div id="custom-cursor">
+        <div class="star-bit-cursor"></div>
+    </div>
+
+    <!-- Starfield Background -->
+    <canvas id="starfield-canvas"></canvas>
+
+    <!-- Warp Pipe Transition -->
+    <div id="warp-pipe" class="warp-pipe"></div>
+
+    <!-- Bowser Jr Alert -->
+    <div id="bowser-alert">
+        <div class="flex items-center gap-3 mb-3">
+            <div class="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-2xl">🐢</div>
+            <div>
+                <h3 class="font-bold text-yellow-300">ALERTA DO BOWSER JR!</h3>
+                <p class="text-xs text-white/80">Clown Car detectado!</p>
+            </div>
+        </div>
+        <p class="text-sm mb-3">Defenda o Comet Observatory! Clique nos projéteis para destruí-los!</p>
+        <canvas id="mini-game-canvas" width="300" height="150"></canvas>
+        <div class="flex gap-2 mt-3">
+            <button id="btn-bowser-play-again" onclick="restartBowserGame()" class="hidden w-full py-2 bg-green-500 hover:bg-green-400 text-black font-bold rounded-lg transition-colors">
+                JOGAR NOVAMENTE
+            </button>
+            <button onclick="closeBowserAlert()" class="w-full py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-lg transition-colors">
+                FECHAR
+            </button>
+        </div>
+    </div>
+
+    <!-- Luma Companion -->
+    <div id="luma-companion" onclick="lumaSpeak()">
+        <div class="luma-star"></div>
+        <div class="luma-body"></div>
+        <div id="luma-speech" class="absolute bottom-full right-0 mb-2 w-48 p-3 bg-black/90 border border-yellow-400 rounded-xl text-xs opacity-0 transition-opacity duration-300 pointer-events-none">
+            Olá! Eu sou um Luma! Colete 100 Star Bits para me transformar!
+        </div>
+    </div>
+
+    <!-- Star Bit Counter -->
+    <div class="fixed top-6 left-6 z-50 glass-strong px-6 py-3 rounded-full flex items-center gap-3">
+        <div class="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg shadow-yellow-500/50">
+            <span class="text-lg">⭐</span>
+        </div>
+        <div>
+            <p class="text-xs text-gray-400 font-orbitron">STAR BITS</p>
+            <p id="star-bit-count" class="text-2xl font-bold font-orbitron text-yellow-400">0</p>
+        </div>
+        <div id="star-bit-target" class="text-xs text-cyan-400">/ 100</div>
+    </div>
+
+    <!-- Audio Toggle -->
+    <button id="audio-toggle" class="fixed top-6 right-6 z-50 glass-strong w-12 h-12 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors" onclick="toggleAudio()">
+        <span id="audio-icon" class="text-xl">🔇</span>
+    </button>
+
+    <!-- Navigation -->
+    <nav id="main-nav" class="fixed top-0 left-0 right-0 z-40 py-4 px-8 transition-all duration-500 opacity-0 -translate-y-full">
+        <div class="glass-strong max-w-7xl mx-auto rounded-2xl px-8 py-4 flex items-center justify-between">
+            <div class="font-orbitron text-2xl font-bold text-yellow-400 neon-gold">MARIO GALAXY</div>
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#hero" class="text-sm hover:text-yellow-400 transition-colors">Início</a>
+                <a href="#trailer" class="text-sm hover:text-yellow-400 transition-colors">Trailer</a>
+                <a href="#personagens" class="text-sm hover:text-yellow-400 transition-colors">Personagens</a>
+                <a href="#galaxias" class="text-sm hover:text-yellow-400 transition-colors">Galáxias</a>
+                <a href="#bilheteria" class="text-sm hover:text-yellow-400 transition-colors">Bilheteria</a>
+                <a href="#constelacao" class="text-sm hover:text-yellow-400 transition-colors">Constelação</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="relative z-10">
+
+        <!-- SECTION 1: HERO -->
+        <section id="hero" class="min-h-screen flex items-center justify-center relative overflow-hidden">
+            <div class="absolute inset-0 z-0">
+                <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl animate-pulse"></div>
+                <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-600/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+            </div>
+
+            <div class="relative z-10 text-center px-4 max-w-6xl mx-auto">
+                <div class="mb-8 inline-block">
+                    <div class="holographic px-8 py-4 rounded-2xl border border-white/20">
+                        <p class="font-orbitron text-cyan-400 text-sm tracking-widest">NINTENDO × ILLUMINATION</p>
+                    </div>
+                </div>
+
+                <h1 class="font-orbitron text-6xl md:text-9xl font-black mb-6 leading-tight">
+                    <span class="block text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 via-yellow-500 to-orange-600 neon-gold">SUPER MARIO</span>
+                    <span class="block text-transparent bg-clip-text bg-gradient-to-b from-cyan-300 via-blue-500 to-purple-600 neon-blue">GALAXY</span>
+                </h1>
+
+                <p class="text-xl md:text-2xl text-gray-300 mb-4 max-w-2xl mx-auto">A maior aventura espacial de todos os tempos</p>
+
+                <div class="flex flex-wrap items-center justify-center gap-4 mb-12">
+                    <div class="glass px-6 py-3 rounded-full">
+                        <span class="text-yellow-400 font-orbitron font-bold">1º DE ABRIL DE 2026</span>
+                    </div>
+                    <div class="glass px-6 py-3 rounded-full">
+                        <span class="text-cyan-400 font-orbitron">SOMENTE NOS CINEMAS</span>
+                    </div>
+                </div>
+
+                <!-- Countdown -->
+                <div class="flex justify-center gap-4 mb-12" id="countdown">
+                    <div class="glass p-4 rounded-2xl min-w-[80px]">
+                        <div class="text-3xl md:text-4xl font-orbitron font-bold text-yellow-400" id="days">00</div>
+                        <div class="text-xs text-gray-400">DIAS</div>
+                    </div>
+                    <div class="glass p-4 rounded-2xl min-w-[80px]">
+                        <div class="text-3xl md:text-4xl font-orbitron font-bold text-yellow-400" id="hours">00</div>
+                        <div class="text-xs text-gray-400">HORAS</div>
+                    </div>
+                    <div class="glass p-4 rounded-2xl min-w-[80px]">
+                        <div class="text-3xl md:text-4xl font-orbitron font-bold text-yellow-400" id="minutes">00</div>
+                        <div class="text-xs text-gray-400">MIN</div>
+                    </div>
+                    <div class="glass p-4 rounded-2xl min-w-[80px]">
+                        <div class="text-3xl md:text-4xl font-orbitron font-bold text-yellow-400" id="seconds">00</div>
+                        <div class="text-xs text-gray-400">SEG</div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap justify-center gap-4">
+                    <button onclick="playTrailer()" class="group relative px-8 py-4 bg-gradient-to-r from-red-600 to-red-500 rounded-full font-bold text-lg overflow-hidden transition-transform hover:scale-105">
+                        <div class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform"></div>
+                        <span class="relative flex items-center gap-2">
+                            <span class="text-2xl">▶</span> ASSISTIR TRAILER
+                        </span>
+                    </button>
+                    <button onclick="scrollToSection('personagens')" class="px-8 py-4 glass rounded-full font-bold text-lg hover:bg-white/10 transition-all hover:scale-105">
+                        CONHEÇA OS PERSONAGENS
+                    </button>
+                </div>
+
+                <!-- Floating Characters -->
+                <div class="absolute top-20 left-10 w-24 h-24 opacity-60 animate-bounce" style="animation-duration: 3s;">
+                    <div class="w-full h-full bg-gradient-to-br from-red-500 to-red-700 rounded-full shadow-lg shadow-red-500/50 flex items-center justify-center text-4xl">🍄</div>
+                </div>
+                <div class="absolute top-40 right-20 w-20 h-20 opacity-60 animate-bounce" style="animation-duration: 4s; animation-delay: 1s;">
+                    <div class="w-full h-full bg-gradient-to-br from-green-500 to-green-700 rounded-full shadow-lg shadow-green-500/50 flex items-center justify-center text-3xl">⭐</div>
+                </div>
+                <div class="absolute bottom-40 left-20 w-16 h-16 opacity-60 animate-bounce" style="animation-duration: 3.5s; animation-delay: 0.5s;">
+                    <div class="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full shadow-lg shadow-yellow-500/50 flex items-center justify-center text-2xl">🌟</div>
+                </div>
+            </div>
+
+            <div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
+                <div class="w-8 h-12 border-2 border-white/30 rounded-full flex justify-center pt-2">
+                    <div class="w-1 h-3 bg-white/60 rounded-full animate-pulse"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: TRAILER -->
+        <section id="trailer" class="py-24 px-4 relative">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-16">
+                    <h2 class="font-orbitron text-5xl md:text-7xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">TRAILERS</h2>
+                    <p class="text-gray-400 text-lg">Viaje pelo cosmos com Mario e seus amigos</p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-6 mb-12">
+                    <button onclick="switchTrailer('final')" class="trailer-btn glass p-6 rounded-2xl text-left hover:bg-white/10 transition-all border-2 border-yellow-500/50">
+                        <div class="text-yellow-400 font-orbitron text-sm mb-2">TRAILER FINAL</div>
+                        <div class="text-white font-bold">A Aventura Cósmica Começa</div>
+                        <div class="text-gray-500 text-sm mt-2">9 de Março de 2026</div>
+                    </button>
+                    <button onclick="switchTrailer('2')" class="trailer-btn glass p-6 rounded-2xl text-left hover:bg-white/10 transition-all border-2 border-transparent hover:border-cyan-500/50">
+                        <div class="text-cyan-400 font-orbitron text-sm mb-2">TRAILER 2</div>
+                        <div class="text-white font-bold">O Universo se Expande</div>
+                        <div class="text-gray-500 text-sm mt-2">25 de Janeiro de 2026</div>
+                    </button>
+                    <button onclick="switchTrailer('1')" class="trailer-btn glass p-6 rounded-2xl text-left hover:bg-white/10 transition-all border-2 border-transparent hover:border-purple-500/50">
+                        <div class="text-purple-400 font-orbitron text-sm mb-2">TRAILER 1</div>
+                        <div class="text-white font-bold">Primeiro Contato</div>
+                        <div class="text-gray-500 text-sm mt-2">12 de Novembro de 2025</div>
+                    </button>
+                </div>
+
+                <div class="relative aspect-video rounded-3xl overflow-hidden glass border-2 border-yellow-500/30 shadow-2xl shadow-yellow-500/20">
+                    <div id="trailer-player" class="w-full h-full bg-black flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="text-6xl mb-4 animate-pulse">🎬</div>
+                            <p class="text-gray-400">Clique em um trailer acima para assistir</p>
+                            <p class="text-sm text-gray-600 mt-2">(Simulação de player cinematográfico)</p>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 to-transparent">
+                        <div class="flex items-center gap-4">
+                            <button class="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-black font-bold hover:scale-110 transition-transform">▶</button>
+                            <div class="flex-1">
+                                <div class="h-1 bg-white/20 rounded-full overflow-hidden">
+                                    <div class="h-full w-0 bg-yellow-500 rounded-full transition-all duration-300" id="trailer-progress"></div>
+                                </div>
+                            </div>
+                            <span class="font-orbitron text-sm">2:34</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: PERSONAGENS -->
+        <section id="personagens" class="py-24 px-4 relative">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center mb-16">
+                    <h2 class="font-orbitron text-5xl md:text-7xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-500">PERSONAGENS</h2>
+                    <p class="text-gray-400 text-lg">O elenco estelar da galáxia</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8" id="characters-grid">
+                    <!-- Characters will be injected by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: GALÁXIAS -->
+        <section id="galaxias" class="py-24 px-4 relative">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center mb-16">
+                    <h2 class="font-orbitron text-5xl md:text-7xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">GALÁXIAS</h2>
+                    <p class="text-gray-400 text-lg">Mundos esperando para serem explorados</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8" id="galaxies-grid">
+                    <!-- Galaxies will be injected by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: SINOPSE -->
+        <section id="sinopse" class="py-24 px-4 relative overflow-hidden">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-16">
+                    <h2 class="font-orbitron text-5xl md:text-7xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">A HISTÓRIA</h2>
+                </div>
+
+                <div class="glass-strong rounded-3xl p-8 md:p-12 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl"></div>
+                    <div class="absolute bottom-0 left-0 w-64 h-64 bg-cyan-600/10 rounded-full blur-3xl"></div>
+
+                    <div class="relative z-10 space-y-8">
+                        <p class="text-xl md:text-2xl leading-relaxed text-gray-200 scramble-text" data-text="Mario e Luigi estão de volta em uma aventura que vai muito além do Reino dos Cogumelos.">
+                            Mario e Luigi estão de volta em uma aventura que vai muito além do Reino dos Cogumelos.
+                        </p>
+
+                        <p class="text-lg leading-relaxed text-gray-300 scramble-text" data-text="Quando Bowser Jr. descobre uma antiga tecnologia estelar capaz de libertar seu pai do encolhimento dimensional, toda a galáxia fica em perigo.">
+                            Quando Bowser Jr. descobre uma antiga tecnologia estelar capaz de libertar seu pai do encolhimento dimensional, toda a galáxia fica em perigo.
+                        </p>
+
+                        <p class="text-lg leading-relaxed text-gray-300 scramble-text" data-text="Agora, os irmãos Mario devem unir forças com a Princesa Peach, Yoshi, Toad e a misteriosa Rosalina para viajar entre galáxias, coletar Power Stars e impedir que o universo entre em colapso.">
+                            Agora, os irmãos Mario devem unir forças com a Princesa Peach, Yoshi, Toad e a misteriosa Rosalina para viajar entre galáxias, coletar Power Stars e impedir que o universo entre em colapso.
+                        </p>
+
+                        <div class="flex flex-wrap gap-4 pt-6">
+                            <span class="px-4 py-2 bg-red-500/20 border border-red-500/50 rounded-full text-red-300 text-sm">Ação</span>
+                            <span class="px-4 py-2 bg-yellow-500/20 border border-yellow-500/50 rounded-full text-yellow-300 text-sm">Aventura</span>
+                            <span class="px-4 py-2 bg-cyan-500/20 border border-cyan-500/50 rounded-full text-cyan-300 text-sm">Comédia</span>
+                            <span class="px-4 py-2 bg-purple-500/20 border border-purple-500/50 rounded-full text-purple-300 text-sm">Ficção Científica</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 6: BILHETERIA -->
+        <section id="bilheteria" class="py-24 px-4 relative">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-16">
+                    <h2 class="font-orbitron text-5xl md:text-7xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600">BOX OFFICE</h2>
+                    <p class="text-gray-400 text-lg">Recordes que brilham como estrelas</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8 mb-12">
+                    <div class="glass-strong rounded-3xl p-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <p class="text-gray-400 text-sm">ARRECADAÇÃO MUNDIAL</p>
+                                <p class="text-4xl md:text-5xl font-orbitron font-bold text-yellow-400">$751M</p>
+                            </div>
+                            <div class="text-6xl">🌍</div>
+                        </div>
+                        <div class="star-progress">
+                            <div class="star-progress-fill" style="width: 0%" data-target="75"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">75% da meta de $1B</p>
+                    </div>
+
+                    <div class="glass-strong rounded-3xl p-8">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <p class="text-gray-400 text-sm">ORÇAMENTO</p>
+                                <p class="text-4xl md:text-5xl font-orbitron font-bold text-cyan-400">$110M</p>
+                            </div>
+                            <div class="text-6xl">💰</div>
+                        </div>
+                        <div class="star-progress">
+                            <div class="star-progress-fill bg-gradient-to-r from-cyan-400 to-blue-500" style="width: 0%" data-target="100"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">Lucro: 6.8x do investimento</p>
+                    </div>
+                </div>
+
+                <div class="glass-strong rounded-3xl p-8">
+                    <h3 class="font-orbitron text-2xl font-bold mb-6 text-center">RECORDES BATIDOS</h3>
+                    <div class="space-y-6">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center text-2xl">🏆</div>
+                            <div class="flex-1">
+                                <div class="flex justify-between mb-1">
+                                    <span class="font-bold">Maior Estreia Global de 2026</span>
+                                    <span class="text-yellow-400">$190.8M</span>
+                                </div>
+                                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                                    <div class="h-full bg-yellow-500 rounded-full" style="width: 95%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center text-2xl">🚀</div>
+                            <div class="flex-1">
+                                <div class="flex justify-between mb-1">
+                                    <span class="font-bold">4ª Maior Estreia de Páscoa da História</span>
+                                    <span class="text-purple-400">Top 4</span>
+                                </div>
+                                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                                    <div class="h-full bg-purple-500 rounded-full" style="width: 85%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-cyan-500/20 rounded-full flex items-center justify-center text-2xl">🎬</div>
+                            <div class="flex-1">
+                                <div class="flex justify-between mb-1">
+                                    <span class="font-bold">Maior Filme de Animação de 2026</span>
+                                    <span class="text-cyan-400">#1</span>
+                                </div>
+                                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                                    <div class="h-full bg-cyan-500 rounded-full" style="width: 100%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 7: CONSTELAÇÃO BUILDER -->
+        <section id="constelacao" class="py-24 px-4 relative">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-16">
+                    <h2 class="font-orbitron text-5xl md:text-7xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">CONSTELAÇÃO</h2>
+                    <p class="text-gray-400 text-lg">Crie sua própria galáxia! Clique para adicionar estrelas e arraste para conectá-las.</p>
+                </div>
+
+                <div class="glass-strong rounded-3xl p-4 md:p-8">
+                    <canvas id="constellation-canvas" class="w-full bg-black/50" style="height: 500px;"></canvas>
+                    <div class="flex flex-wrap justify-center gap-4 mt-6">
+                        <button onclick="clearConstellation()" class="px-6 py-3 bg-red-500/20 border border-red-500/50 rounded-full hover:bg-red-500/40 transition-colors">
+                            🗑️ Limpar
+                        </button>
+                        <button onclick="saveConstellation()" class="px-6 py-3 bg-yellow-500/20 border border-yellow-500/50 rounded-full hover:bg-yellow-500/40 transition-colors">
+                            💾 Salvar
+                        </button>
+                        <button onclick="randomConstellation()" class="px-6 py-3 bg-cyan-500/20 border border-cyan-500/50 rounded-full hover:bg-cyan-500/40 transition-colors">
+                            🎲 Aleatório
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 8: MERCHANDISING -->
+        <section id="merch" class="py-24 px-4 relative">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-16">
+                    <h2 class="font-orbitron text-5xl md:text-7xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500">POWER-UP STORE</h2>
+                    <p class="text-gray-400 text-lg">Leve a galáxia para casa</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6" id="merch-grid">
+                    <!-- Merch items injected by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 9: FOOTER -->
+        <footer class="py-16 px-4 relative border-t border-white/10">
+            <div class="max-w-6xl mx-auto">
+                <div class="grid md:grid-cols-4 gap-8 mb-12">
+                    <div>
+                        <h3 class="font-orbitron text-2xl font-bold text-yellow-400 mb-4">MARIO GALAXY</h3>
+                        <p class="text-gray-400 text-sm">Uma produção Nintendo × Illumination. A aventura continua nas estrelas.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold mb-4">Explorar</h4>
+                        <ul class="space-y-2 text-gray-400 text-sm">
+                            <li><a href="#hero" class="hover:text-yellow-400 transition-colors">Início</a></li>
+                            <li><a href="#trailer" class="hover:text-yellow-400 transition-colors">Trailers</a></li>
+                            <li><a href="#personagens" class="hover:text-yellow-400 transition-colors">Personagens</a></li>
+                            <li><a href="#galaxias" class="hover:text-yellow-400 transition-colors">Galáxias</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold mb-4">Social</h4>
+                        <div class="flex gap-4">
+                            <a href="#" class="w-10 h-10 glass rounded-full flex items-center justify-center hover:bg-yellow-500/20 transition-colors text-xl">🐦</a>
+                            <a href="#" class="w-10 h-10 glass rounded-full flex items-center justify-center hover:bg-yellow-500/20 transition-colors text-xl">📸</a>
+                            <a href="#" class="w-10 h-10 glass rounded-full flex items-center justify-center hover:bg-yellow-500/20 transition-colors text-xl">▶️</a>
+                            <a href="#" class="w-10 h-10 glass rounded-full flex items-center justify-center hover:bg-yellow-500/20 transition-colors text-xl">🎮</a>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-bold mb-4">Newsletter</h4>
+                        <div class="flex gap-2">
+                            <input type="email" placeholder="Seu e-mail" class="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-yellow-400 text-sm">
+                            <button class="px-4 py-2 bg-yellow-500 text-black font-bold rounded-lg hover:bg-yellow-400 transition-colors">→</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center pt-8 border-t border-white/10">
+                    <p class="text-gray-500 text-sm">© 2026 Nintendo / Illumination Entertainment. Todos os direitos reservados.</p>
+                    <p class="text-gray-600 text-xs mt-2 font-mono" id="post-credit">01001000 01100101 01110010 01101111 01100101 01110011 00100000 01101110 01100101 01110110 01100101 01110010 00100000 01100100 01101001 01100101</p>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <!-- Tooltip -->
+    <div id="cosmic-tooltip" class="cosmic-tooltip"></div>
+
+    <script>
+        // ==================== GLOBAL STATE ====================
+        let starBits = 0;
+        let audioEnabled = false;
+        let synth = null;
+        let currentTrailer = 'final';
+        let constellationStars = [];
+        let constellationLines = [];
+        let isDrawingLine = false;
+        let lastStarIndex = -1;
+
+        // ==================== LOADING SCREEN ====================
+        window.addEventListener('load', () => {
+            const loadingBar = document.getElementById('loading-bar');
+            const loadingText = document.getElementById('loading-text');
+            const texts = ['Coletando Star Bits...', 'Carregando galáxias...', 'Invocando Lumas...', 'Preparando o Comet Observatory...', 'Warp iniciado!'];
+            let progress = 0;
+
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    loadingText.textContent = 'Bem-vindo à galáxia!';
+                    setTimeout(() => {
+                        document.getElementById('loading-screen').classList.add('hidden');
+                        initStarfield();
+                        initAudio();
+                        spawnStarBits();
+                        startCountdown();
+                        initCharacters();
+                        initGalaxies();
+                        initMerch();
+                        initConstellation();
+                        initScrollAnimations();
+                        initBowserAlert();
+                    }, 800);
+                }
+                loadingBar.style.width = progress + '%';
+                loadingText.textContent = texts[Math.floor((progress / 100) * texts.length)];
+            }, 200);
+        });
+
+        // ==================== CUSTOM CURSOR ====================
+        const cursor = document.getElementById('custom-cursor');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+
+            // Particle trail
+            if (Math.random() > 0.8) {
+                createParticleTrail(e.clientX, e.clientY);
+            }
+        });
+
+        document.addEventListener('mousedown', () => {
+            cursor.style.transform = 'translate(-50%, -50%) scale(0.8)';
+        });
+
+        document.addEventListener('mouseup', () => {
+            cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+        });
+
+        function createParticleTrail(x, y) {
+            const particle = document.createElement('div');
+            particle.className = 'particle-trail';
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+            document.body.appendChild(particle);
+            setTimeout(() => particle.remove(), 1000);
+        }
+
+        // ==================== STARFIELD CANVAS ====================
+        function initStarfield() {
+            const canvas = document.getElementById('starfield-canvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let stars = [];
+            let mouseX = 0, mouseY = 0;
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            // Create stars
+            for (let i = 0; i < 200; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 2 + 0.5,
+                    speed: Math.random() * 0.5 + 0.1,
+                    brightness: Math.random(),
+                    layer: Math.floor(Math.random() * 3)
+                });
+            }
+
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+
+                stars.forEach(star => {
+                    // Parallax based on layer
+                    const parallaxX = (mouseX - width / 2) * (star.layer + 1) * 0.01;
+                    const parallaxY = (mouseY - height / 2) * (star.layer + 1) * 0.01;
+
+                    let x = star.x + parallaxX;
+                    let y = star.y + parallaxY;
+
+                    // Wrap around
+                    if (x < 0) x += width;
+                    if (x > width) x -= width;
+                    if (y < 0) y += height;
+                    if (y > height) y -= height;
+
+                    // Twinkle
+                    star.brightness += (Math.random() - 0.5) * 0.1;
+                    star.brightness = Math.max(0.3, Math.min(1, star.brightness));
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, star.size, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness * (star.layer + 1) / 3})`;
+                    ctx.fill();
+
+                    // Glow for bright stars
+                    if (star.brightness > 0.8) {
+                        ctx.beginPath();
+                        ctx.arc(x, y, star.size * 3, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 215, 0, ${0.1 * star.brightness})`;
+                        ctx.fill();
+                    }
+                });
+
+                // Draw connections near mouse
+                stars.forEach(star => {
+                    const parallaxX = (mouseX - width / 2) * (star.layer + 1) * 0.01;
+                    const parallaxY = (mouseY - height / 2) * (star.layer + 1) * 0.01;
+                    const x = star.x + parallaxX;
+                    const y = star.y + parallaxY;
+                    const dist = Math.hypot(x - mouseX, y - mouseY);
+
+                    if (dist < 100) {
+                        ctx.beginPath();
+                        ctx.moveTo(x, y);
+                        ctx.lineTo(mouseX, mouseY);
+                        ctx.strokeStyle = `rgba(255, 215, 0, ${0.2 * (1 - dist / 100)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                });
+
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        // ==================== STAR BITS SYSTEM ====================
+        function spawnStarBits() {
+            const sections = document.querySelectorAll('section');
+            sections.forEach(section => {
+                const bit = document.createElement('div');
+                bit.className = 'star-bit';
+                bit.style.left = Math.random() * 80 + 10 + '%';
+                bit.style.top = Math.random() * 80 + 10 + '%';
+                bit.onclick = (e) => collectStarBit(e, bit);
+                section.appendChild(bit);
+            });
+        }
+
+        function collectStarBit(e, element) {
+            e.stopPropagation();
+            starBits++;
+            document.getElementById('star-bit-count').textContent = starBits;
+
+            // Animation
+            element.style.transform = 'scale(2) translateY(-50px)';
+            element.style.opacity = '0';
+
+            // Sound
+            if (audioEnabled && synth) {
+                synth.triggerAttackRelease("C6", "32n");
+                setTimeout(() => synth.triggerAttackRelease("E6", "32n"), 100);
+            }
+
+            // Check evolution
+            if (starBits === 100) {
+                evolveLuma();
+            }
+
+            setTimeout(() => element.remove(), 500);
+        }
+
+        function evolveLuma() {
+            const luma = document.querySelector('.luma-body');
+            luma.style.background = 'radial-gradient(circle at 30% 30%, #E6E6FA 0%, #9370DB 40%, #4B0082 100%)';
+            luma.style.boxShadow = '0 0 40px rgba(147, 112, 219, 0.8)';
+
+            const speech = document.getElementById('luma-speech');
+            speech.textContent = 'Uau! Você coletou 100 Star Bits! Eu evoluí para um Luma Cósmico! 🌟';
+            speech.style.opacity = '1';
+            setTimeout(() => speech.style.opacity = '0', 4000);
+        }
+
+        // ==================== LUMA COMPANION ====================
+        let lumaTargetX = 0, lumaTargetY = 0;
+        document.addEventListener('mousemove', (e) => {
+            lumaTargetX = e.clientX;
+            lumaTargetY = e.clientY;
+        });
+
+        function updateLumaPosition() {
+            const luma = document.getElementById('luma-companion');
+            const rect = luma.getBoundingClientRect();
+            const currentX = rect.left + rect.width / 2;
+            const currentY = rect.top + rect.height / 2;
+
+            // Luma follows with delay but stays in corner
+            const targetX = window.innerWidth - 80;
+            const targetY = window.innerHeight - 80;
+
+            const dx = targetX - currentX;
+            const dy = targetY - currentY;
+
+            luma.style.right = '30px';
+            luma.style.bottom = '30px';
+        }
+
+        function lumaSpeak() {
+            const phrases = [
+                'Olá! Eu sou um Luma!',
+                'Rosalina está observando as estrelas!',
+                'Você já visitou o Comet Observatory?',
+                'Cada estrela tem uma história para contar!',
+                'Mario está pronto para a aventura!',
+                'Colete mais Star Bits para desbloquear segredos!'
+            ];
+            const speech = document.getElementById('luma-speech');
+            speech.textContent = phrases[Math.floor(Math.random() * phrases.length)];
+            speech.style.opacity = '1';
+            setTimeout(() => speech.style.opacity = '0', 3000);
+
+            if (audioEnabled && synth) {
+                synth.triggerAttackRelease("G5", "16n");
+            }
+        }
+
+        // ==================== AUDIO SYSTEM ====================
+        function initAudio() {
+            // Initialize synth but don't start yet
+            synth = new Tone.PolySynth(Tone.Synth).toDestination();
+            synth.volume.value = -10;
+        }
+
+        async function toggleAudio() {
+            if (!audioEnabled) {
+                await Tone.start();
+                audioEnabled = true;
+                document.getElementById('audio-icon').textContent = '🔊';
+
+                // Play startup sound
+                const now = Tone.now();
+                synth.triggerAttackRelease("C4", "8n", now);
+                synth.triggerAttackRelease("E4", "8n", now + 0.1);
+                synth.triggerAttackRelease("G4", "8n", now + 0.2);
+                synth.triggerAttackRelease("C5", "4n", now + 0.3);
+            } else {
+                audioEnabled = false;
+                document.getElementById('audio-icon').textContent = '🔇';
+            }
+        }
+
+        // ==================== COUNTDOWN ====================
+        function startCountdown() {
+            const releaseDate = new Date('2026-04-01T00:00:00');
+
+            function update() {
+                const now = new Date();
+                const diff = releaseDate - now;
+
+                if (diff <= 0) {
+                    document.getElementById('days').textContent = '00';
+                    document.getElementById('hours').textContent = '00';
+                    document.getElementById('minutes').textContent = '00';
+                    document.getElementById('seconds').textContent = '00';
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                document.getElementById('days').textContent = String(days).padStart(2, '0');
+                document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+                document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+                document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+            }
+
+            update();
+            setInterval(update, 1000);
+        }
+
+        // ==================== TRAILER SYSTEM ====================
+        function switchTrailer(type) {
+            currentTrailer = type;
+            const player = document.getElementById('trailer-player');
+            const progress = document.getElementById('trailer-progress');
+
+            // Update buttons
+            document.querySelectorAll('.trailer-btn').forEach(btn => {
+                btn.classList.remove('border-yellow-500/50');
+                btn.classList.add('border-transparent');
+            });
+            event.currentTarget.classList.remove('border-transparent');
+            event.currentTarget.classList.add('border-yellow-500/50');
+
+            // Simulate loading
+            player.innerHTML = `
+                <div class="text-center">
+                    <div class="text-6xl mb-4 animate-spin">⭐</div>
+                    <p class="text-gray-400">Carregando trailer ${type}...</p>
+                </div>
+            `;
+
+            setTimeout(() => {
+                const titles = {
+                    'final': 'TRAILER FINAL - A Aventura Cósmica Começa',
+                    '2': 'TRAILER 2 - O Universo se Expande', 
+                    '1': 'TRAILER 1 - Primeiro Contato'
+                };
+
+                player.innerHTML = `
+                    <div class="relative w-full h-full bg-gradient-to-br from-purple-900 to-blue-900 flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="text-8xl mb-6 animate-pulse">🎬</div>
+                            <h3 class="text-3xl font-orbitron font-bold text-white mb-4">${titles[type]}</h3>
+                            <p class="text-gray-300">Player Cinematográfico Galaxy</p>
+                            <div class="mt-8 flex justify-center gap-2">
+                                <div class="audio-bar" style="animation-delay: 0s;"></div>
+                                <div class="audio-bar" style="animation-delay: 0.1s;"></div>
+                                <div class="audio-bar" style="animation-delay: 0.2s;"></div>
+                                <div class="audio-bar" style="animation-delay: 0.3s;"></div>
+                                <div class="audio-bar" style="animation-delay: 0.4s;"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Animate progress
+                progress.style.width = '0%';
+                setTimeout(() => progress.style.width = '100%', 100);
+            }, 1000);
+
+            if (audioEnabled && synth) {
+                synth.triggerAttackRelease("C5", "16n");
+            }
+        }
+
+        function playTrailer() {
+            document.getElementById('trailer').scrollIntoView({ behavior: 'smooth' });
+            setTimeout(() => {
+                document.querySelector('.trailer-btn').click();
+            }, 500);
+        }
+
+        // ==================== CHARACTERS DATA & RENDERING ====================
+        const characters = [
+            { name: 'Mario', actor: 'Chris Pratt', color: '#E52521', emoji: '🔴', desc: 'O herói encanador parte para as estrelas!', aura: 'rgba(229, 37, 33, 0.4)' },
+            { name: 'Luigi', actor: 'Charlie Day', color: '#43B047', emoji: '🟢', desc: 'O irmão corajoso enfrenta seus medos no espaço.', aura: 'rgba(67, 176, 71, 0.4)' },
+            { name: 'Peach', actor: 'Anya Taylor-Joy', color: '#FF69B4', emoji: '👑', desc: 'A princesa com poderes cósmicos.', aura: 'rgba(255, 105, 180, 0.4)' },
+            { name: 'Bowser', actor: 'Jack Black', color: '#8B4513', emoji: '🐢', desc: 'O rei Koopa em sua forma mais perigosa.', aura: 'rgba(139, 69, 19, 0.4)' },
+            { name: 'Toad', actor: 'Keegan-Michael Key', color: '#FF6347', emoji: '🍄', desc: 'O fiel cogumelo a bordo da nave.', aura: 'rgba(255, 99, 71, 0.4)' },
+            { name: 'Yoshi', actor: 'Donald Glover', color: '#32CD32', emoji: '🦖', desc: 'O dinossauro espacial chegou!', aura: 'rgba(50, 205, 50, 0.4)' },
+            { name: 'Rosalina', actor: 'Brie Larson', color: '#4ECDC4', emoji: '✨', desc: 'A mãe das estrelas e guardiã do cosmos.', aura: 'rgba(78, 205, 196, 0.4)' },
+            { name: 'Bowser Jr.', actor: 'Benny Safdie', color: '#FF4500', emoji: '🎨', desc: 'O herdeiro do trono com planos malignos.', aura: 'rgba(255, 69, 0, 0.4)' }
+        ];
+
+        function initCharacters() {
+            const grid = document.getElementById('characters-grid');
+            characters.forEach((char, index) => {
+                const card = document.createElement('div');
+                card.className = 'card-3d relative';
+                card.innerHTML = `
+                    <div class="glass rounded-3xl p-6 h-full relative overflow-hidden group cursor-pointer" onclick="collectCharacter('${char.name}')">
+                        <div class="character-aura" style="background: ${char.aura};"></div>
+                        <div class="relative z-10">
+                            <div class="w-24 h-24 mx-auto mb-4 rounded-full flex items-center justify-center text-5xl" style="background: ${char.color}20; border: 3px solid ${char.color};">
+                                ${char.emoji}
+                            </div>
+                            <h3 class="font-orbitron text-xl font-bold text-center mb-1" style="color: ${char.color};">${char.name}</h3>
+                            <p class="text-center text-gray-400 text-sm mb-3">${char.actor}</p>
+                            <p class="text-center text-gray-300 text-sm">${char.desc}</p>
+                            <div class="mt-4 flex justify-center">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold" style="background: ${char.color}30; color: ${char.color}; border: 1px solid ${char.color};">
+                                    COLETAR ⭐
+                                </span>
+                            </div>
+                        </div>
+                        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span class="text-2xl">✨</span>
+                        </div>
+                    </div>
+                `;
+
+                // 3D tilt effect
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = (y - centerY) / 10;
+                    const rotateY = (centerX - x) / 10;
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+                });
+
+                grid.appendChild(card);
+
+                // Stagger animation
+                gsap.from(card, {
+                    scrollTrigger: {
+                        trigger: card,
+                        start: 'top 85%',
+                    },
+                    y: 100,
+                    opacity: 0,
+                    duration: 0.8,
+                    delay: index * 0.1,
+                    ease: 'power3.out'
+                });
+            });
+        }
+
+        let collectedChars = [];
+        function collectCharacter(name) {
+            if (!collectedChars.includes(name)) {
+                collectedChars.push(name);
+                starBits += 5;
+                document.getElementById('star-bit-count').textContent = starBits;
+
+                if (audioEnabled && synth) {
+                    synth.triggerAttackRelease("C6", "16n");
+                }
+
+                // Show tooltip
+                const tooltip = document.getElementById('cosmic-tooltip');
+                tooltip.textContent = `${name} coletado! +5 Star Bits`;
+                tooltip.classList.add('show');
+                setTimeout(() => tooltip.classList.remove('show'), 2000);
+            }
+        }
+
+        // ==================== GALAXIES DATA & RENDERING ====================
+        const galaxies = [
+            { name: 'Good Egg Galaxy', emoji: '🥚', color: '#90EE90', desc: 'O ponto de partida da aventura cósmica.' },
+            { name: 'Honeyhive Galaxy', emoji: '🍯', color: '#FFD700', desc: 'Um mundo doce habitado por abelhas gigantes.' },
+            { name: 'Ghostly Galaxy', emoji: '👻', color: '#9370DB', desc: 'Fantasmas e mistérios no espaço sideral.' },
+            { name: "Bowser Jr.'s Robot Reactor", emoji: '🤖', color: '#FF4500', desc: 'A fortaleza mecânica do pequeno tirano.' },
+            { name: 'Comet Observatory', emoji: '🔭', color: '#4ECDC4', desc: 'A base espacial da Rosalina.' },
+            { name: 'Star Fox Crossover', emoji: '🦊', color: '#FF6347', desc: 'Fox McCloud entra na batalha espacial!' }
+        ];
+
+        function initGalaxies() {
+            const grid = document.getElementById('galaxies-grid');
+            galaxies.forEach((gal, index) => {
+                const card = document.createElement('div');
+                card.className = 'galaxy-card glass rounded-3xl overflow-hidden cursor-pointer';
+                card.innerHTML = `
+                    <div class="relative h-64 p-6 flex flex-col justify-end">
+                        <div class="galaxy-planet absolute top-4 right-4 w-20 h-20 rounded-full flex items-center justify-center text-4xl" style="background: ${gal.color}40; box-shadow: 0 0 30px ${gal.color}60;">
+                            ${gal.emoji}
+                        </div>
+                        <div class="relative z-10">
+                            <h3 class="font-orbitron text-xl font-bold mb-2" style="color: ${gal.color};">${gal.name}</h3>
+                            <p class="text-gray-300 text-sm">${gal.desc}</p>
+                            <div class="mt-4 flex items-center gap-2">
+                                <span class="text-yellow-400">⭐</span>
+                                <span class="text-sm text-gray-400">Power Stars: ${Math.floor(Math.random() * 50 + 10)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                card.addEventListener('click', () => {
+                    if (audioEnabled && synth) {
+                        synth.triggerAttackRelease("E5", "16n");
+                    }
+                    starBits += 3;
+                    document.getElementById('star-bit-count').textContent = starBits;
+                });
+
+                grid.appendChild(card);
+                gsap.fromTo(card, 
+                    { scale: 0.8, opacity: 0 },
+                    {
+                        scrollTrigger: {
+                            trigger: card,
+                            start: 'top 95%',
+                        },
+                        scale: 1,
+                        opacity: 1,
+                        duration: 0.8,
+                        delay: index * 0.15,
+                        ease: 'back.out(1.7)'
+                    }
+                );
+            });
+            setTimeout(() => ScrollTrigger.refresh(), 500);
+        }
+
+        // ==================== MERCHANDISING ====================
+        const merchItems = [
+            { name: 'Luma Shoulder Pal', price: 'R$ 199', emoji: '⭐', desc: 'Luma interativo com luz e som!' },
+            { name: 'Mario Wheelie RC', price: 'R$ 349', emoji: '🏍️', desc: 'Moto de controle remoto estilo Galaxy.' },
+            { name: 'Bowser Jr. Playset', price: 'R$ 279', emoji: '🤖', desc: 'Playset da fortaleza mecânica.' },
+            { name: 'Power Star Lamp', price: 'R$ 159', emoji: '💡', desc: 'Luminária que flutua magneticamente.' }
+        ];
+
+        function initMerch() {
+            const grid = document.getElementById('merch-grid');
+            merchItems.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'glass rounded-2xl p-6 hover:bg-white/10 transition-all cursor-pointer group';
+                card.innerHTML = `
+                    <div class="text-5xl mb-4 group-hover:scale-110 transition-transform">${item.emoji}</div>
+                    <h4 class="font-bold text-lg mb-2">${item.name}</h4>
+                    <p class="text-gray-400 text-sm mb-4">${item.desc}</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-yellow-400 font-orbitron font-bold">${item.price}</span>
+                        <button class="px-4 py-2 bg-yellow-500 text-black text-sm font-bold rounded-full hover:bg-yellow-400 transition-colors">
+                            COMPRAR
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // ==================== CONSTELLATION BUILDER ====================
+        function initConstellation() {
+            const canvas = document.getElementById('constellation-canvas');
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                canvas.width = rect.width - 64;
+                canvas.height = 500;
+                drawConstellation();
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            canvas.addEventListener('click', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                // Check if clicking near existing star
+                let nearStar = -1;
+                constellationStars.forEach((star, i) => {
+                    if (Math.hypot(star.x - x, star.y - y) < 20) {
+                        nearStar = i;
+                    }
+                });
+
+                if (nearStar !== -1) {
+                    // Connect to last star
+                    if (lastStarIndex !== -1 && lastStarIndex !== nearStar) {
+                        constellationLines.push([lastStarIndex, nearStar]);
+                    }
+                    lastStarIndex = nearStar;
+                } else {
+                    // Add new star
+                    constellationStars.push({ x, y, brightness: Math.random() * 0.5 + 0.5 });
+                    if (lastStarIndex !== -1) {
+                        constellationLines.push([lastStarIndex, constellationStars.length - 1]);
+                    }
+                    lastStarIndex = constellationStars.length - 1;
+                }
+
+                drawConstellation();
+
+                if (audioEnabled && synth) {
+                    const note = ["C5", "E5", "G5", "B5", "C6"][Math.floor(Math.random() * 5)];
+                    synth.triggerAttackRelease(note, "16n");
+                }
+            });
+        }
+
+        function drawConstellation() {
+            const canvas = document.getElementById('constellation-canvas');
+            const ctx = canvas.getContext('2d');
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw lines
+            constellationLines.forEach(line => {
+                const star1 = constellationStars[line[0]];
+                const star2 = constellationStars[line[1]];
+                if (star1 && star2) {
+                    ctx.beginPath();
+                    ctx.moveTo(star1.x, star1.y);
+                    ctx.lineTo(star2.x, star2.y);
+                    ctx.strokeStyle = 'rgba(255, 215, 0, 0.4)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            });
+
+            // Draw stars
+            constellationStars.forEach(star => {
+                // Glow
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, 15, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 215, 0, ${0.2 * star.brightness})`;
+                ctx.fill();
+
+                // Star
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness})`;
+                ctx.fill();
+            });
+        }
+
+        function clearConstellation() {
+            constellationStars = [];
+            constellationLines = [];
+            lastStarIndex = -1;
+            drawConstellation();
+        }
+
+        function saveConstellation() {
+            const canvas = document.getElementById('constellation-canvas');
+            const link = document.createElement('a');
+            link.download = 'minha-constelacao-mario-galaxy.png';
+            link.href = canvas.toDataURL();
+            link.click();
+
+            starBits += 10;
+            document.getElementById('star-bit-count').textContent = starBits;
+
+            const tooltip = document.getElementById('cosmic-tooltip');
+            tooltip.textContent = 'Constelação salva! +10 Star Bits';
+            tooltip.classList.add('show');
+            setTimeout(() => tooltip.classList.remove('show'), 2000);
+        }
+
+        function randomConstellation() {
+            clearConstellation();
+            const canvas = document.getElementById('constellation-canvas');
+            const numStars = Math.floor(Math.random() * 8) + 5;
+
+            for (let i = 0; i < numStars; i++) {
+                constellationStars.push({
+                    x: Math.random() * (canvas.width - 100) + 50,
+                    y: Math.random() * (canvas.height - 100) + 50,
+                    brightness: Math.random() * 0.5 + 0.5
+                });
+                if (i > 0) {
+                    constellationLines.push([i - 1, i]);
+                }
+            }
+            // Connect last to first
+            if (numStars > 2) {
+                constellationLines.push([numStars - 1, 0]);
+            }
+
+            drawConstellation();
+        }
+
+        // ==================== SCROLL ANIMATIONS ====================
+        function initScrollAnimations() {
+            // Register ScrollTrigger
+            gsap.registerPlugin(ScrollTrigger);
+
+            // Navigation show/hide
+            ScrollTrigger.create({
+                start: 'top -100',
+                end: 99999,
+                onToggle: self => {
+                    const nav = document.querySelector('#main-nav');
+                    if (nav) {
+                        if (self.isActive) {
+                            nav.classList.add('opacity-100', 'translate-y-0');
+                        } else {
+                            nav.classList.remove('opacity-100', 'translate-y-0');
+                        }
+                    }
+                }
+            });
+
+            // Section reveals
+            gsap.utils.toArray('section').forEach(section => {
+                gsap.from(section.querySelectorAll('h2, p, .glass, .glass-strong'), {
+                    scrollTrigger: {
+                        trigger: section,
+                        start: 'top 80%',
+                    },
+                    y: 50,
+                    opacity: 0,
+                    duration: 1,
+                    stagger: 0.2,
+                    ease: 'power3.out'
+                });
+            });
+
+            // Bilheteria progress bars
+            ScrollTrigger.create({
+                trigger: '#bilheteria',
+                start: 'top 70%',
+                onEnter: () => {
+                    document.querySelectorAll('.star-progress-fill').forEach(bar => {
+                        const target = bar.dataset.target;
+                        if (target) {
+                            bar.style.width = target + '%';
+                        }
+                    });
+                }
+            });
+
+            // Scramble text effect for sinopse
+            const scrambleTexts = document.querySelectorAll('.scramble-text');
+            scrambleTexts.forEach(el => {
+                const originalText = el.dataset.text || el.textContent;
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+
+                ScrollTrigger.create({
+                    trigger: el,
+                    start: 'top 80%',
+                    onEnter: () => {
+                        let iterations = 0;
+                        const interval = setInterval(() => {
+                            el.textContent = originalText.split('').map((char, index) => {
+                                if (index < iterations) return originalText[index];
+                                if (char === ' ') return ' ';
+                                return chars[Math.floor(Math.random() * chars.length)];
+                            }).join('');
+
+                            iterations += 1;
+                            if (iterations > originalText.length) clearInterval(interval);
+                        }, 30);
+                    }
+                });
+            });
+        }
+
+        // ==================== WARP PIPE TRANSITION ====================
+        function scrollToSection(id) {
+            const pipe = document.getElementById('warp-pipe');
+            pipe.classList.add('active');
+
+            if (audioEnabled && synth) {
+                synth.triggerAttackRelease("C4", "8n");
+                setTimeout(() => synth.triggerAttackRelease("G4", "8n"), 200);
+            }
+
+            setTimeout(() => {
+                document.getElementById(id).scrollIntoView({ behavior: 'instant' });
+                pipe.classList.remove('active');
+            }, 800);
+        }
+
+        // ==================== BOWSER JR ALERT ====================
+        function initBowserAlert() {
+            // Show alert after 30 seconds of inactivity
+            let inactiveTime = 0;
+            const alert = document.getElementById('bowser-alert');
+
+            document.addEventListener('mousemove', () => { inactiveTime = 0; });
+            document.addEventListener('click', () => { inactiveTime = 0; });
+            document.addEventListener('keypress', () => { inactiveTime = 0; });
+
+            setInterval(() => {
+                inactiveTime += 1000;
+                if (inactiveTime > 30000 && !alert.classList.contains('show')) {
+                    alert.classList.add('show');
+                    initMiniGame();
+                    if (audioEnabled && synth) {
+                        synth.triggerAttackRelease("C3", "4n");
+                    }
+                }
+            }, 1000);
+        }
+
+        function closeBowserAlert() {
+            document.getElementById('bowser-alert').classList.remove('show');
+            const btnPlayAgain = document.getElementById('btn-bowser-play-again');
+            if(btnPlayAgain) btnPlayAgain.classList.add('hidden');
+        }
+
+        function restartBowserGame() {
+            document.getElementById('btn-bowser-play-again').classList.add('hidden');
+            initBowserAlert();
+        }
+
+        function initMiniGame() {
+            const canvas = document.getElementById('mini-game-canvas');
+            const ctx = canvas.getContext('2d');
+            let projectiles = [];
+            let score = 0;
+            let gameActive = true;
+
+            function spawnProjectile() {
+                if (!gameActive) return;
+                projectiles.push({
+                    x: Math.random() * canvas.width,
+                    y: 0,
+                    speed: Math.random() * 2 + 1,
+                    size: 10
+                });
+            }
+
+            canvas.addEventListener('click', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                projectiles = projectiles.filter(p => {
+                    if (Math.hypot(p.x - x, p.y - y) < 20) {
+                        score++;
+                        if (audioEnabled && synth) {
+                            synth.triggerAttackRelease("C6", "32n");
+                        }
+                        return false;
+                    }
+                    return true;
+                });
+            });
+
+            function gameLoop() {
+                if (!gameActive) return;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Draw observatory
+                ctx.fillStyle = '#4ECDC4';
+                ctx.beginPath();
+                ctx.arc(canvas.width / 2, canvas.height - 20, 30, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Update projectiles
+                projectiles.forEach(p => {
+                    p.y += p.speed;
+                    ctx.fillStyle = '#E52521';
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                projectiles = projectiles.filter(p => p.y < canvas.height);
+
+                // Score
+                ctx.fillStyle = 'white';
+                ctx.font = '16px Orbitron';
+                ctx.fillText(`Score: ${score}`, 10, 20);
+
+                if (Math.random() < 0.03) spawnProjectile();
+
+                requestAnimationFrame(gameLoop);
+            }
+
+            gameLoop();
+
+            // End game after 10 seconds
+            setTimeout(() => {
+                gameActive = false;
+                ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#FFD700';
+                ctx.font = '20px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.fillText(`FIM! Score: ${score}`, canvas.width / 2, canvas.height / 2);
+                ctx.textAlign = 'left';
+
+                starBits += score;
+                document.getElementById('star-bit-count').textContent = starBits;
+                
+                const playAgainBtn = document.getElementById('btn-bowser-play-again');
+                if(playAgainBtn) playAgainBtn.classList.remove('hidden');
+            }, 10000);
+        }
+
+        // ==================== POST-CREDITS EASTER EGG ====================
+        const postCredit = document.getElementById('post-credit');
+        if (postCredit) {
+            setInterval(() => {
+                postCredit.style.opacity = postCredit.style.opacity === '0' ? '1' : '0';
+            }, 3000);
+        }
+
+        // ==================== SMOOTH SCROLL FOR NAV LINKS ====================
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = this.getAttribute('href').substring(1);
+                scrollToSection(target);
+            });
+        });
+
+        // ==================== GRAVITY FLIP ON SCROLL ====================
+        let lastScrollY = 0;
+        window.addEventListener('scroll', () => {
+            const currentScrollY = window.scrollY;
+            const sinopse = document.getElementById('sinopse');
+
+            if (sinopse) {
+                const rect = sinopse.getBoundingClientRect();
+                if (rect.top < window.innerHeight / 2 && rect.bottom > window.innerHeight / 2) {
+                    // In sinopse section - subtle rotation effect
+                    const rotation = Math.min(5, (window.innerHeight / 2 - rect.top) / 100);
+                    sinopse.style.transform = `rotate(${rotation}deg)`;
+                } else {
+                    sinopse.style.transform = 'rotate(0deg)';
+                }
+            }
+
+            lastScrollY = currentScrollY;
+        });
+
+    </script>
+</body>
+</html>

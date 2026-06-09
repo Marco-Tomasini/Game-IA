@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI_TEST | Mario Lab</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --xbox-green: #107c10;
+      --xbox-green-light: #16db16;
+      --bg-dark: #0a0a0a;
+      --panel: rgba(8, 12, 10, 0.78);
+      --panel-strong: rgba(16, 20, 18, 0.96);
+      --line: rgba(255, 255, 255, 0.12);
+      --text: #f4fff4;
+      --muted: #a7b5a7;
+      --aurora-bg: radial-gradient(circle at top, #003366 0%, #050505 50%, #4d3300 100%);
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background: var(--aurora-bg);
+      background-attachment: fixed;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 30%, rgba(22, 219, 22, 0.12), transparent 32%),
+        radial-gradient(circle at 80% 80%, rgba(0, 120, 215, 0.12), transparent 34%),
+        radial-gradient(circle at 0% 100%, rgba(255, 185, 0, 0.1), transparent 28%);
+      pointer-events: none;
+    }
+
+    .page-shell {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 15px clamp(18px, 5vw, 50px);
+      background: rgba(0, 0, 0, 0.62);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+    }
+
+    .back-link {
+      width: 42px;
+      height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(22, 219, 22, 0.45);
+      border-radius: 50%;
+      color: white;
+      background: rgba(16, 124, 16, 0.22);
+      text-decoration: none;
+      font-size: 28px;
+      line-height: 1;
+      box-shadow: 0 0 18px rgba(16, 124, 16, 0.28);
+      transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+    }
+
+    .back-link:hover,
+    .back-link:focus-visible {
+      transform: translateX(-3px);
+      background: var(--xbox-green);
+      border-color: var(--xbox-green-light);
+      outline: none;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .brand strong {
+      color: var(--xbox-green-light);
+      font-size: 13px;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+    }
+
+    .brand span {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    #clock {
+      color: #d8ead8;
+      font-size: 18px;
+      font-weight: 300;
+      letter-spacing: 2px;
+      white-space: nowrap;
+    }
+
+    main {
+      width: min(1120px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 42px 0 52px;
+      flex: 1;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      margin-bottom: 26px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      color: var(--xbox-green-light);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--xbox-green-light);
+      box-shadow: 0 0 14px var(--xbox-green-light);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 7vw, 4.9rem);
+      line-height: 0.95;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      text-shadow: 0 16px 35px rgba(0, 0, 0, 0.65);
+    }
+
+    .subtitle {
+      max-width: 680px;
+      margin: 16px 0 0;
+      color: #d5dfd5;
+      font-size: 16px;
+      line-height: 1.55;
+      overflow-wrap: break-word;
+    }
+
+    .stats {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .stat {
+      min-width: 116px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.36);
+    }
+
+    .stat strong {
+      display: block;
+      color: var(--xbox-green-light);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .stat span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .tools {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .search-wrap {
+      position: relative;
+    }
+
+    .search-wrap::before {
+      content: "";
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #93a393;
+      border-radius: 50%;
+      transform: translateY(-58%);
+      pointer-events: none;
+    }
+
+    .search-wrap::after {
+      content: "";
+      position: absolute;
+      left: 29px;
+      top: 50%;
+      width: 8px;
+      height: 2px;
+      background: #93a393;
+      transform: translateY(5px) rotate(45deg);
+      transform-origin: left center;
+      pointer-events: none;
+    }
+
+    #search {
+      width: 100%;
+      height: 50px;
+      padding: 0 16px 0 46px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: white;
+      background: rgba(0, 0, 0, 0.42);
+      font: inherit;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    #search::placeholder {
+      color: #8d9b8d;
+    }
+
+    #search:focus {
+      border-color: var(--xbox-green-light);
+      box-shadow: 0 0 0 3px rgba(22, 219, 22, 0.12);
+    }
+
+    .sort-label {
+      min-height: 50px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--muted);
+      background: rgba(0, 0, 0, 0.32);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .sort-label::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--xbox-green-light);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .project-card {
+      min-height: 244px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 18px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: white;
+      background:
+        linear-gradient(145deg, rgba(8, 12, 10, 0.95), rgba(14, 28, 16, 0.94)),
+        var(--panel-strong);
+      text-decoration: none;
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.46);
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .project-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.75), transparent 70%);
+      pointer-events: none;
+    }
+
+    .project-card::after {
+      content: "";
+      position: absolute;
+      right: -40px;
+      top: -40px;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: 18px solid rgba(22, 219, 22, 0.08);
+      pointer-events: none;
+    }
+
+    .project-card:hover,
+    .project-card:focus-visible,
+    .project-card.selected {
+      transform: translateY(-5px);
+      border-color: rgba(22, 219, 22, 0.72);
+      box-shadow: 0 0 28px rgba(16, 124, 16, 0.35), 0 22px 48px rgba(0, 0, 0, 0.58);
+      outline: none;
+    }
+
+    .project-card.selected {
+      border-color: var(--xbox-green-light);
+      box-shadow: 0 0 0 3px rgba(22, 219, 22, 0.18), 0 0 30px rgba(16, 124, 16, 0.45), 0 22px 48px rgba(0, 0, 0, 0.58);
+    }
+
+    .project-card.selected .open-pill {
+      background: var(--xbox-green-light);
+      color: #041008;
+    }
+
+    .project-top,
+    .project-bottom {
+      position: relative;
+      z-index: 1;
+    }
+
+    .project-kicker {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .project-kicker span:last-child {
+      color: var(--xbox-green-light);
+    }
+
+    .project-title {
+      max-width: 13ch;
+      margin: 0;
+      font-size: 30px;
+      line-height: 0.98;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .project-model {
+      margin-top: 12px;
+      color: #d8e2d8;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .project-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 26px;
+    }
+
+    .project-size {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .open-pill {
+      width: 38px;
+      height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: var(--xbox-green);
+      color: white;
+      font-size: 25px;
+      line-height: 1;
+      box-shadow: 0 0 18px rgba(16, 124, 16, 0.46);
+      flex: 0 0 auto;
+    }
+
+    #empty {
+      display: none;
+      padding: 54px 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      background: rgba(0, 0, 0, 0.36);
+      text-align: center;
+    }
+
+    .bottom-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 18px clamp(18px, 5vw, 50px);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0.68));
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .control {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #d8ead8;
+    }
+
+    .circle {
+      width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: var(--xbox-green);
+      color: white;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    @media (max-width: 760px) {
+      .top-bar {
+        align-items: flex-start;
+      }
+
+      .hero,
+      .tools {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        justify-content: flex-start;
+      }
+
+      .sort-label {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .bottom-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    @media (max-width: 480px) {
+      main {
+        width: min(100% - 24px, 1120px);
+        padding-top: 30px;
+      }
+
+      .top-bar {
+        justify-content: flex-start;
+        gap: 12px;
+        padding: 14px 12px;
+      }
+
+      .brand {
+        flex: 1;
+      }
+
+      .brand strong {
+        font-size: 11px;
+        line-height: 1.25;
+        white-space: normal;
+      }
+
+      .brand span,
+      #clock {
+        display: none;
+      }
+
+      .project-title {
+        font-size: 26px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="top-bar">
+      <a class="back-link" href="../../index.html" aria-label="Voltar ao menu principal" title="Voltar ao menu principal">&larr;</a>
+      <div class="brand" aria-label="AI_TEST Mario Lab">
+        <strong>XBOX HTML | AI_TEST</strong>
+        <span>Mario Lab · Modelos locais</span>
+      </div>
+      <div id="clock">00:00</div>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="page-title">
+        <div>
+          <div class="eyebrow">Workspace Local</div>
+          <h1 id="page-title">Mario Lab</h1>
+          <p class="subtitle">Comparação de sites Web Mario criados por modelos diferentes com o mesmo prompt, para avaliar estilo, acabamento e decisões de cada saída.</p>
+        </div>
+        <div class="stats" id="stats"></div>
+      </section>
+
+      <section class="tools" aria-label="Ferramentas do seletor">
+        <div class="search-wrap">
+          <input type="search" id="search" placeholder="Filtrar por modelo ou arquivo..." autocomplete="off" />
+        </div>
+        <div class="sort-label">HTML pronto</div>
+      </section>
+
+      <section class="grid" id="grid" aria-label="Projetos AI_TEST"></section>
+      <div id="empty">Nenhum projeto encontrado.</div>
+    </main>
+
+    <footer class="bottom-bar">
+      <span class="control"><span class="circle">D</span> Navegar</span>
+      <span class="control"><span class="circle">A</span> Abrir projeto</span>
+      <span class="control"><span class="circle">B</span> Voltar</span>
+      <span>AI_TEST · 5 demos HTML</span>
+    </footer>
+  </div>
+
+  <script>
+    const projects = [
+      {
+        id: "instant-kimi",
+        title: "Instant",
+        model: "KIMI 2.6",
+        mode: "Modo instantaneo",
+        file: "WEB-MARIO-INSTANT KIMI2.6.html",
+        size: "77 KB"
+      },
+      {
+        id: "thinking-kimi",
+        title: "Thinking",
+        model: "KIMI 2.6",
+        mode: "Modo thinking",
+        file: "WEB-MARIO-THINKING KIMI2.6.html",
+        size: "81 KB"
+      },
+      {
+        id: "glm-flash",
+        title: "GLM Flash",
+        model: "GLM 4.7",
+        mode: "Flash build",
+        file: "web-mario-glm4.7flash.html",
+        size: "29 KB"
+      },
+      {
+        id: "mimo-pro",
+        title: "MiMo Pro",
+        model: "MiMo 2.5",
+        mode: "Pro build",
+        file: "WEB-MARIO-MIMO2.5-pro.html",
+        size: "102 KB"
+      },
+      {
+        id: "qwen-local",
+        title: "Qwen",
+        model: "Qwen 3.6",
+        mode: "4-bit local",
+        file: "WEB-MARIO-qwen3.6-4bit.html",
+        size: "78 KB"
+      }
+    ];
+
+    const grid = document.getElementById("grid");
+    const empty = document.getElementById("empty");
+    const search = document.getElementById("search");
+    const stats = document.getElementById("stats");
+    const backLink = document.querySelector(".back-link");
+    let visibleProjects = [...projects];
+    let selectedIndex = 0;
+    let resizeFrame;
+
+    const gamepadState = {
+      buttons: {},
+      lastMoveAt: 0,
+      readyForActions: false
+    };
+
+    function renderStats() {
+      stats.innerHTML = `
+        <div class="stat"><strong>${projects.length}</strong><span>Demos</span></div>
+        <div class="stat"><strong>HTML</strong><span>Formato</span></div>
+      `;
+    }
+
+    function renderCards(list) {
+      visibleProjects = list;
+      selectedIndex = Math.min(selectedIndex, Math.max(list.length - 1, 0));
+      empty.style.display = list.length ? "none" : "block";
+      grid.innerHTML = list.map((project, index) => `
+        <a class="project-card" href="${project.file}" data-id="${project.id}" data-index="${index}" aria-label="Abrir ${project.title} ${project.model}" style="--i:${index}">
+          <div class="project-top">
+            <div class="project-kicker">
+              <span>${project.mode}</span>
+              <span>${String(index + 1).padStart(2, "0")}</span>
+            </div>
+            <h2 class="project-title">${project.title}</h2>
+            <div class="project-model">${project.model}</div>
+          </div>
+          <div class="project-bottom">
+            <span class="project-size">${project.size}</span>
+            <span class="open-pill" aria-hidden="true">&rarr;</span>
+          </div>
+        </a>
+      `).join("");
+      bindCardSelection();
+      selectProject(selectedIndex, false);
+    }
+
+    function getCards() {
+      return [...document.querySelectorAll(".project-card")];
+    }
+
+    function bindCardSelection() {
+      getCards().forEach((card, index) => {
+        card.addEventListener("focus", () => selectProject(index, false));
+        card.addEventListener("mouseenter", () => selectProject(index, false));
+      });
+    }
+
+    function selectProject(index, shouldScroll = true) {
+      const cards = getCards();
+      if (!cards.length) return;
+
+      selectedIndex = Math.max(0, Math.min(index, cards.length - 1));
+      cards.forEach((card, cardIndex) => {
+        const isSelected = cardIndex === selectedIndex;
+        card.classList.toggle("selected", isSelected);
+        card.setAttribute("aria-current", isSelected ? "true" : "false");
+      });
+
+      if (shouldScroll) {
+        cards[selectedIndex].scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+      }
+    }
+
+    function getGridColumns() {
+      const cards = getCards();
+      if (cards.length < 2) return 1;
+
+      const firstTop = cards[0].offsetTop;
+      const firstRowCount = cards.findIndex((card) => card.offsetTop !== firstTop);
+      return firstRowCount === -1 ? cards.length : Math.max(1, firstRowCount);
+    }
+
+    function moveHorizontal(direction) {
+      if (!visibleProjects.length) return;
+      selectProject((selectedIndex + direction + visibleProjects.length) % visibleProjects.length);
+    }
+
+    function moveVertical(direction) {
+      if (!visibleProjects.length) return;
+      const columns = getGridColumns();
+      const nextIndex = selectedIndex + (direction * columns);
+      selectProject(Math.max(0, Math.min(nextIndex, visibleProjects.length - 1)));
+    }
+
+    function openSelectedProject() {
+      const project = visibleProjects[selectedIndex];
+      if (!project) return;
+      window.location.href = project.file;
+    }
+
+    function goBack() {
+      window.location.href = backLink.getAttribute("href");
+    }
+
+    function filterProjects() {
+      const query = search.value.toLowerCase().trim();
+      const filtered = projects.filter((project) => {
+        const haystack = `${project.title} ${project.model} ${project.mode} ${project.file}`.toLowerCase();
+        return haystack.includes(query);
+      });
+      selectedIndex = 0;
+      renderCards(filtered);
+    }
+
+    function wasPressed(name, pressed) {
+      const previous = gamepadState.buttons[name] || false;
+      gamepadState.buttons[name] = pressed;
+      return pressed && !previous;
+    }
+
+    function handleGamepad(gamepad) {
+      const now = performance.now();
+      const axisX = gamepad.axes[0] || 0;
+      const axisY = gamepad.axes[1] || 0;
+      const left = gamepad.buttons[14]?.pressed || axisX < -0.5;
+      const right = gamepad.buttons[15]?.pressed || axisX > 0.5;
+      const up = gamepad.buttons[12]?.pressed || axisY < -0.5;
+      const down = gamepad.buttons[13]?.pressed || axisY > 0.5;
+      const aPressed = gamepad.buttons[0]?.pressed || false;
+      const bPressed = gamepad.buttons[1]?.pressed || false;
+
+      if (now - gamepadState.lastMoveAt > 170) {
+        if (left) {
+          search.blur();
+          moveHorizontal(-1);
+          gamepadState.lastMoveAt = now;
+        } else if (right) {
+          search.blur();
+          moveHorizontal(1);
+          gamepadState.lastMoveAt = now;
+        } else if (up) {
+          search.blur();
+          moveVertical(-1);
+          gamepadState.lastMoveAt = now;
+        } else if (down) {
+          search.blur();
+          moveVertical(1);
+          gamepadState.lastMoveAt = now;
+        }
+      }
+
+      if (!gamepadState.readyForActions) {
+        gamepadState.buttons.a = aPressed;
+        gamepadState.buttons.b = bPressed;
+        gamepadState.readyForActions = !aPressed && !bPressed;
+        return;
+      }
+
+      if (wasPressed("a", aPressed)) {
+        openSelectedProject();
+      }
+
+      if (wasPressed("b", bPressed)) {
+        goBack();
+      }
+    }
+
+    function pollGamepads() {
+      const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+      const gamepad = [...gamepads].find(Boolean);
+      if (gamepad) handleGamepad(gamepad);
+      requestAnimationFrame(pollGamepads);
+    }
+
+    function updateClock() {
+      const now = new Date();
+      document.getElementById("clock").innerText = now
+        .toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: true })
+        .toLowerCase();
+    }
+
+    search.addEventListener("input", filterProjects);
+    window.addEventListener("keydown", (event) => {
+      const key = event.key.toLowerCase();
+
+      if (document.activeElement === search) {
+        if (key === "escape") {
+          event.preventDefault();
+          search.blur();
+          selectProject(selectedIndex);
+        }
+        return;
+      }
+
+      if (key === "arrowleft") {
+        event.preventDefault();
+        moveHorizontal(-1);
+      } else if (key === "arrowright") {
+        event.preventDefault();
+        moveHorizontal(1);
+      } else if (key === "arrowup") {
+        event.preventDefault();
+        moveVertical(-1);
+      } else if (key === "arrowdown") {
+        event.preventDefault();
+        moveVertical(1);
+      } else if (key === "enter" || key === " " || key === "a") {
+        event.preventDefault();
+        openSelectedProject();
+      } else if (key === "escape" || key === "backspace" || key === "b") {
+        event.preventDefault();
+        goBack();
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      cancelAnimationFrame(resizeFrame);
+      resizeFrame = requestAnimationFrame(() => selectProject(selectedIndex, false));
+    });
+
+    renderStats();
+    renderCards(projects);
+    updateClock();
+    pollGamepads();
+    setInterval(updateClock, 30000);
+  </script>
+</body>
+</html>

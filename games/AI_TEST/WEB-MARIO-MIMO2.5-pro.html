@@ -1,0 +1,2011 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Mario Galaxy — O Filme</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #050510;
+            --bg-space: #0a0a1a;
+            --bg-surface: #111128;
+            --bg-card: #161638;
+            --mario-red: #e52521;
+            --mario-red-glow: rgba(229, 37, 33, 0.5);
+            --star-gold: #ffc832;
+            --star-gold-glow: rgba(255, 200, 50, 0.5);
+            --galaxy-blue: #5b9bd5;
+            --cosmic-purple: #7b2fbe;
+            --nebula-pink: #ff6b9d;
+            --nebula-cyan: #00d4ff;
+            --luigi-green: #39b54a;
+            --peach-pink: #ff8fab;
+            --rosalina-blue: #a8d8ea;
+            --bowser-orange: #ff6600;
+            --toad-red: #cc2936;
+            --text-primary: #f0ece4;
+            --text-secondary: #c8c2b8;
+            --text-muted: #6a6578;
+            --font-display: 'Syne', sans-serif;
+            --font-serif: 'Instrument Serif', serif;
+            --font-mono: 'DM Mono', monospace;
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            scroll-behavior: auto;
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: var(--mario-red) var(--bg-deep);
+        }
+        html::-webkit-scrollbar { width: 6px; }
+        html::-webkit-scrollbar-track { background: var(--bg-deep); }
+        html::-webkit-scrollbar-thumb { background: var(--mario-red); border-radius: 3px; }
+
+        body {
+            font-family: var(--font-mono);
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            cursor: none;
+            -webkit-font-smoothing: antialiased;
+            transition: transform 1.2s cubic-bezier(0.68, -0.2, 0.27, 1.2), filter 1.2s ease;
+        }
+
+        body.gravity-flipped {
+            transform: rotate(180deg);
+            filter: hue-rotate(30deg);
+        }
+
+        body.gravity-flipped #cursor,
+        body.gravity-flipped #cursor-follower,
+        body.gravity-flipped #star-hud,
+        body.gravity-flipped #gravity-btn,
+        body.gravity-flipped #audio-btn,
+        body.gravity-flipped #constellation-btn,
+        body.gravity-flipped .scroll-progress,
+        body.gravity-flipped nav {
+            transform: rotate(180deg) !important;
+        }
+
+        a { color: inherit; text-decoration: none; cursor: none; }
+        button { cursor: none; }
+        ::selection { background: var(--mario-red); color: white; }
+
+        /* ═══ CURSOR ═══ */
+        #cursor {
+            position: fixed; width: 8px; height: 8px;
+            background: var(--star-gold); border-radius: 50%;
+            pointer-events: none; z-index: 99999;
+            mix-blend-mode: difference; transition: transform 0.1s ease;
+        }
+        #cursor-follower {
+            position: fixed; width: 36px; height: 36px;
+            border: 1.5px solid var(--star-gold); border-radius: 50%;
+            pointer-events: none; z-index: 99998;
+            transition: width 0.3s, height 0.3s, border-color 0.3s; opacity: 0.5;
+        }
+        #cursor.hovering { transform: scale(3); background: var(--mario-red); }
+        #cursor-follower.hovering { width: 60px; height: 60px; border-color: var(--mario-red); opacity: 0.3; }
+
+        /* ═══ LOADER ═══ */
+        #loader {
+            position: fixed; inset: 0; background: var(--bg-deep);
+            z-index: 100000; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            transition: opacity 0.8s, visibility 0.8s;
+        }
+        #loader.hidden { opacity: 0; visibility: hidden; }
+        .loader-galaxy { width: 120px; height: 120px; position: relative; }
+        .loader-galaxy .ring {
+            position: absolute; inset: 0;
+            border: 2px solid transparent; border-radius: 50%;
+        }
+        .loader-galaxy .ring:nth-child(1) { border-top-color: var(--mario-red); animation: lSpin 2s linear infinite; }
+        .loader-galaxy .ring:nth-child(2) { inset: 15px; border-right-color: var(--star-gold); animation: lSpin 1.5s linear infinite reverse; }
+        .loader-galaxy .ring:nth-child(3) { inset: 30px; border-bottom-color: var(--nebula-cyan); animation: lSpin 1s linear infinite; }
+        .loader-galaxy .core {
+            position: absolute; top: 50%; left: 50%;
+            width: 16px; height: 16px; background: var(--star-gold);
+            border-radius: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 0 30px var(--star-gold-glow), 0 0 60px var(--star-gold-glow);
+            animation: corePulse 1.5s ease-in-out infinite;
+        }
+        .loader-text {
+            font-family: var(--font-display); font-weight: 800;
+            font-size: 0.85rem; letter-spacing: 0.4em;
+            text-transform: uppercase; color: var(--text-muted);
+            margin-top: 40px; animation: tFade 2s ease-in-out infinite;
+        }
+        @keyframes lSpin { to { transform: rotate(360deg); } }
+        @keyframes corePulse { 0%,100% { transform: translate(-50%,-50%) scale(1); } 50% { transform: translate(-50%,-50%) scale(1.3); } }
+        @keyframes tFade { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+        /* ═══ STARFIELD CANVAS ═══ */
+        #starfield { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+        /* ═══ SCROLL PROGRESS ═══ */
+        .scroll-progress {
+            position: fixed; top: 0; left: 0; height: 3px;
+            background: linear-gradient(90deg, var(--mario-red), var(--star-gold), var(--nebula-cyan));
+            z-index: 10001; width: 0%; transition: width 0.1s linear;
+        }
+
+        /* ═══ NOISE ═══ */
+        body::after {
+            content: ''; position: fixed; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none; z-index: 9999; opacity: 0.4;
+        }
+
+        /* ═══════════════════════════════════════════
+           ★ INNOVATIVE: STAR POWER HUD
+        ═══════════════════════════════════════════ */
+        #star-hud {
+            position: fixed; top: 90px; right: 24px;
+            z-index: 10002; display: flex; align-items: center; gap: 10px;
+            background: rgba(5, 5, 16, 0.8); backdrop-filter: blur(12px);
+            padding: 10px 18px; border-radius: 40px;
+            border: 1px solid rgba(255, 200, 50, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        #star-hud.level-up {
+            box-shadow: 0 0 40px var(--star-gold-glow), 0 0 80px rgba(255,200,50,0.2);
+            border-color: var(--star-gold);
+        }
+        .hud-star {
+            width: 22px; height: 22px;
+            background: var(--star-gold);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            animation: hudStarSpin 4s linear infinite;
+            flex-shrink: 0;
+        }
+        @keyframes hudStarSpin { to { transform: rotate(360deg); } }
+        .hud-count {
+            font-family: var(--font-display); font-weight: 800;
+            font-size: 1.1rem; color: var(--star-gold);
+            min-width: 30px; text-align: center;
+            transition: transform 0.2s;
+        }
+        .hud-count.bump { transform: scale(1.4); }
+        .hud-label {
+            font-family: var(--font-mono); font-size: 0.6rem;
+            letter-spacing: 0.15em; text-transform: uppercase;
+            color: var(--text-muted);
+        }
+        .hud-bar {
+            width: 60px; height: 4px;
+            background: rgba(255,255,255,0.1); border-radius: 2px;
+            overflow: hidden;
+        }
+        .hud-bar-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, var(--star-gold), var(--mario-red));
+            border-radius: 2px; transition: width 0.5s ease;
+        }
+
+        /* ═══ COLLECTIBLE STARS ═══ */
+        .collect-star {
+            position: fixed; z-index: 9998; cursor: none;
+            width: 20px; height: 20px; pointer-events: all;
+            transition: transform 0.2s, opacity 0.2s;
+            animation: starFloat 6s ease-in-out infinite;
+        }
+        .collect-star:hover { transform: scale(1.5) !important; }
+        .collect-star .star-shape {
+            width: 100%; height: 100%;
+            background: var(--star-gold);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            filter: drop-shadow(0 0 8px var(--star-gold-glow));
+        }
+        .collect-star.collected {
+            opacity: 0; transform: scale(2) !important;
+            pointer-events: none;
+        }
+        @keyframes starFloat {
+            0%,100% { transform: translateY(0) rotate(0deg); }
+            33% { transform: translateY(-15px) rotate(10deg); }
+            66% { transform: translateY(8px) rotate(-5deg); }
+        }
+
+        /* ═══════════════════════════════════════════
+           ★ INNOVATIVE: GRAVITY FLIP BUTTON
+        ═══════════════════════════════════════════ */
+        #gravity-btn {
+            position: fixed; bottom: 24px; left: 24px;
+            z-index: 10002; background: rgba(5, 5, 16, 0.8);
+            backdrop-filter: blur(12px); border: 1px solid rgba(229,37,33,0.3);
+            padding: 10px 18px; border-radius: 40px;
+            font-family: var(--font-display); font-weight: 700;
+            font-size: 0.7rem; letter-spacing: 0.15em;
+            text-transform: uppercase; color: var(--mario-red);
+            transition: all 0.3s ease; display: flex;
+            align-items: center; gap: 8px;
+        }
+        #gravity-btn:hover {
+            background: var(--mario-red); color: white;
+            box-shadow: 0 0 30px var(--mario-red-glow);
+        }
+        #gravity-btn .grav-icon {
+            display: inline-block; transition: transform 0.6s ease;
+            font-size: 1rem;
+        }
+        #gravity-btn.active .grav-icon { transform: rotate(180deg); }
+        #gravity-btn.active {
+            background: var(--mario-red); color: white;
+            border-color: var(--mario-red);
+        }
+
+        /* ═══════════════════════════════════════════
+           ★ INNOVATIVE: AUDIO BUTTON
+        ═══════════════════════════════════════════ */
+        #audio-btn {
+            position: fixed; bottom: 24px; left: 180px;
+            z-index: 10002; background: rgba(5, 5, 16, 0.8);
+            backdrop-filter: blur(12px); border: 1px solid rgba(0,212,255,0.3);
+            padding: 10px 18px; border-radius: 40px;
+            font-family: var(--font-display); font-weight: 700;
+            font-size: 0.7rem; letter-spacing: 0.15em;
+            text-transform: uppercase; color: var(--nebula-cyan);
+            transition: all 0.3s ease; display: flex;
+            align-items: center; gap: 8px;
+        }
+        #audio-btn:hover {
+            background: var(--nebula-cyan); color: var(--bg-deep);
+            box-shadow: 0 0 30px rgba(0,212,255,0.4);
+        }
+        #audio-btn.active {
+            background: var(--nebula-cyan); color: var(--bg-deep);
+            border-color: var(--nebula-cyan);
+        }
+        .audio-bars {
+            display: flex; gap: 2px; align-items: flex-end; height: 14px;
+        }
+        .audio-bars span {
+            width: 3px; background: currentColor; border-radius: 1px;
+            transition: height 0.1s ease;
+        }
+        #audio-btn.active .audio-bars span:nth-child(1) { animation: aBar 0.5s ease-in-out infinite alternate; }
+        #audio-btn.active .audio-bars span:nth-child(2) { animation: aBar 0.4s ease-in-out infinite alternate 0.1s; }
+        #audio-btn.active .audio-bars span:nth-child(3) { animation: aBar 0.6s ease-in-out infinite alternate 0.2s; }
+        #audio-btn.active .audio-bars span:nth-child(4) { animation: aBar 0.45s ease-in-out infinite alternate 0.05s; }
+        @keyframes aBar { from { height: 3px; } to { height: 14px; } }
+
+        /* ═══════════════════════════════════════════
+           ★ INNOVATIVE: CONSTELLATION BUTTON
+        ═══════════════════════════════════════════ */
+        #constellation-btn {
+            position: fixed; bottom: 24px; left: 340px;
+            z-index: 10002; background: rgba(5, 5, 16, 0.8);
+            backdrop-filter: blur(12px); border: 1px solid rgba(123,47,190,0.3);
+            padding: 10px 18px; border-radius: 40px;
+            font-family: var(--font-display); font-weight: 700;
+            font-size: 0.7rem; letter-spacing: 0.15em;
+            text-transform: uppercase; color: var(--cosmic-purple);
+            transition: all 0.3s ease; display: flex;
+            align-items: center; gap: 8px;
+        }
+        #constellation-btn:hover {
+            background: var(--cosmic-purple); color: white;
+            box-shadow: 0 0 30px rgba(123,47,190,0.4);
+        }
+        #constellation-btn.active {
+            background: var(--cosmic-purple); color: white;
+            border-color: var(--cosmic-purple);
+        }
+
+        /* ═══ CONSTELLATION CANVAS ═══ */
+        #constellation-canvas {
+            position: fixed; inset: 0; z-index: 9997;
+            pointer-events: none; cursor: none;
+        }
+        #constellation-canvas.active {
+            pointer-events: all; cursor: none;
+        }
+
+        /* ═══ GALAXY WARP OVERLAY ═══ */
+        #warp-overlay {
+            position: fixed; inset: 0; z-index: 100003;
+            pointer-events: none; opacity: 0;
+            transition: opacity 0.3s;
+        }
+        #warp-overlay.active { opacity: 1; pointer-events: all; }
+        .warp-ring {
+            position: absolute; top: 50%; left: 50%;
+            border-radius: 50%; border: 2px solid var(--star-gold);
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+        }
+        .warp-ring.animating {
+            animation: warpExpand 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes warpExpand {
+            0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+            70% { opacity: 0.8; }
+            100% { transform: translate(-50%,-50%) scale(4); opacity: 0; }
+        }
+        .warp-center {
+            position: absolute; top: 50%; left: 50%;
+            width: 20px; height: 20px;
+            background: var(--star-gold); border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            box-shadow: 0 0 60px var(--star-gold-glow);
+        }
+        .warp-center.animating {
+            animation: warpCenter 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes warpCenter {
+            0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+            40% { transform: translate(-50%,-50%) scale(15); opacity: 1; }
+            100% { transform: translate(-50%,-50%) scale(30); opacity: 0; }
+        }
+
+        /* ═══ 3D PLANET ═══ */
+        #planet-3d-container {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px; height: 200px;
+            perspective: 800px; z-index: 2;
+            pointer-events: none; opacity: 0.6;
+        }
+        #planet-3d {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
+            background: radial-gradient(circle at 35% 35%, #74b9ff, #0984e3, #0c1445);
+            box-shadow:
+                inset -30px -30px 60px rgba(0,0,0,0.6),
+                0 0 60px rgba(91, 155, 213, 0.3),
+                0 0 120px rgba(91, 155, 213, 0.1);
+        }
+        #planet-3d::before {
+            content: ''; position: absolute; inset: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15), transparent 60%);
+        }
+        #planet-3d::after {
+            content: ''; position: absolute;
+            width: 280px; height: 40px;
+            border: 2px solid rgba(255, 200, 50, 0.25);
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotateX(75deg);
+        }
+        .planet-surface {
+            position: absolute; inset: 0; border-radius: 50%; overflow: hidden;
+        }
+        .planet-surface .crater {
+            position: absolute; border-radius: 50%;
+            background: rgba(0,0,0,0.15);
+        }
+
+        /* ═══ KONAMI NOTIFICATION ═══ */
+        #konami-toast {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            z-index: 100004; background: rgba(5,5,16,0.95);
+            backdrop-filter: blur(20px); border: 2px solid var(--star-gold);
+            border-radius: 20px; padding: 48px 64px;
+            text-align: center;
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s;
+            opacity: 0;
+        }
+        #konami-toast.show {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+        #konami-toast .konami-star {
+            font-size: 4rem; display: block; margin-bottom: 16px;
+            animation: corePulse 1s ease-in-out infinite;
+        }
+        #konami-toast h3 {
+            font-family: var(--font-display); font-weight: 800;
+            font-size: 1.5rem; text-transform: uppercase;
+            color: var(--star-gold); margin-bottom: 8px;
+        }
+        #konami-toast p {
+            font-family: var(--font-mono); font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* ═══ MILESTONE FLASH ═══ */
+        .milestone-flash {
+            position: fixed; inset: 0; z-index: 100001;
+            background: radial-gradient(circle, var(--star-gold-glow), transparent);
+            pointer-events: none; opacity: 0;
+            animation: milestoneFlash 1s ease-out forwards;
+        }
+        @keyframes milestoneFlash {
+            0% { opacity: 0.6; }
+            100% { opacity: 0; }
+        }
+
+        /* ═══ STAR RAIN (Konami) ═══ */
+        .star-rain-star {
+            position: fixed; z-index: 100003; pointer-events: none;
+            width: 12px; height: 12px;
+            background: var(--star-gold);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            animation: starRainFall linear forwards;
+        }
+        @keyframes starRainFall {
+            0% { opacity: 1; transform: translateY(-20px) rotate(0deg); }
+            100% { opacity: 0; transform: translateY(100vh) rotate(720deg); }
+        }
+
+        /* ═══ NAV ═══ */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0;
+            z-index: 10000; padding: 24px 48px;
+            display: flex; align-items: center; justify-content: space-between;
+            transition: background 0.4s, padding 0.4s, backdrop-filter 0.4s;
+        }
+        nav.scrolled {
+            background: rgba(5, 5, 16, 0.85);
+            backdrop-filter: blur(20px); padding: 16px 48px;
+        }
+        .nav-logo {
+            font-family: var(--font-display); font-weight: 800;
+            font-size: 1.1rem; letter-spacing: 0.15em;
+            text-transform: uppercase; display: flex;
+            align-items: center; gap: 10px;
+        }
+        .nav-logo .star-icon {
+            width: 20px; height: 20px; background: var(--star-gold);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            animation: starSpin 6s linear infinite;
+        }
+        @keyframes starSpin { to { transform: rotate(360deg); } }
+        .nav-links { display: flex; gap: 36px; list-style: none; }
+        .nav-links a {
+            font-family: var(--font-mono); font-size: 0.75rem; font-weight: 400;
+            letter-spacing: 0.15em; text-transform: uppercase;
+            color: var(--text-muted); transition: color 0.3s; position: relative;
+        }
+        .nav-links a::after {
+            content: ''; position: absolute; bottom: -4px; left: 0;
+            width: 0; height: 1px; background: var(--star-gold);
+            transition: width 0.3s;
+        }
+        .nav-links a:hover, .nav-links a.active { color: var(--text-primary); }
+        .nav-links a:hover::after, .nav-links a.active::after { width: 100%; }
+        .nav-cta {
+            font-family: var(--font-display); font-size: 0.75rem; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            padding: 10px 24px; border: 1px solid var(--mario-red);
+            color: var(--mario-red); background: transparent;
+            transition: all 0.3s; position: relative; overflow: hidden;
+        }
+        .nav-cta::before {
+            content: ''; position: absolute; inset: 0;
+            background: var(--mario-red); transform: translateX(-101%);
+            transition: transform 0.3s; z-index: -1;
+        }
+        .nav-cta:hover { color: white; }
+        .nav-cta:hover::before { transform: translateX(0); }
+
+        /* ═══ HERO ═══ */
+        #hero {
+            position: relative; min-height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-align: center; z-index: 1; overflow: hidden;
+        }
+        .hero-bg-glow {
+            position: absolute; width: 800px; height: 800px;
+            border-radius: 50%; filter: blur(150px);
+            opacity: 0.15; pointer-events: none;
+        }
+        .hero-bg-glow.glow-1 { background: var(--mario-red); top: -200px; left: -200px; animation: gD1 12s ease-in-out infinite alternate; }
+        .hero-bg-glow.glow-2 { background: var(--cosmic-purple); bottom: -300px; right: -200px; animation: gD2 15s ease-in-out infinite alternate; }
+        .hero-bg-glow.glow-3 { background: var(--nebula-cyan); top: 30%; left: 60%; width: 400px; height: 400px; animation: gD3 10s ease-in-out infinite alternate; }
+        @keyframes gD1 { to { transform: translate(100px, 80px); } }
+        @keyframes gD2 { to { transform: translate(-80px, -60px); } }
+        @keyframes gD3 { to { transform: translate(-120px, 50px); } }
+
+        .hero-preface {
+            font-family: var(--font-mono); font-size: 0.75rem; font-weight: 300;
+            letter-spacing: 0.5em; text-transform: uppercase;
+            color: var(--text-muted); margin-bottom: 24px;
+            opacity: 0; transform: translateY(20px);
+            animation: fadeUp 0.8s ease forwards 0.5s;
+        }
+        .hero-title {
+            font-family: var(--font-display); font-weight: 800;
+            font-size: clamp(3rem, 10vw, 8rem); line-height: 0.95;
+            letter-spacing: -0.02em; text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .hero-title .char {
+            display: inline-block; opacity: 0; transform: translateY(100%);
+            animation: charReveal 0.6s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+        @keyframes charReveal { to { opacity: 1; transform: translateY(0); } }
+        .hero-title .line-mario { color: var(--mario-red); text-shadow: 0 0 80px var(--mario-red-glow); }
+        .hero-title .line-galaxy { color: var(--star-gold); text-shadow: 0 0 80px var(--star-gold-glow); }
+
+        .hero-subtitle {
+            font-family: var(--font-serif); font-style: italic;
+            font-size: clamp(1.5rem, 3vw, 2.5rem); color: var(--text-secondary);
+            margin-bottom: 40px; opacity: 0;
+            animation: fadeUp 0.8s ease forwards 1.4s;
+        }
+        .hero-date {
+            font-family: var(--font-mono); font-size: 0.85rem; font-weight: 500;
+            letter-spacing: 0.3em; color: var(--star-gold);
+            padding: 12px 32px; border: 1px solid rgba(255,200,50,0.3);
+            opacity: 0; animation: fadeUp 0.8s ease forwards 1.8s, dateGlow 3s ease-in-out infinite 2.6s;
+        }
+        @keyframes dateGlow { 0%,100% { box-shadow: 0 0 20px rgba(255,200,50,0.1); } 50% { box-shadow: 0 0 40px rgba(255,200,50,0.25); } }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+        .hero-planets { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+        .planet { position: absolute; border-radius: 50%; animation: pFloat 20s ease-in-out infinite; }
+        .planet-1 { width: 80px; height: 80px; background: radial-gradient(circle at 30% 30%, #ff6b6b, #c0392b); top: 15%; left: 8%; animation-duration: 25s; box-shadow: inset -10px -10px 20px rgba(0,0,0,0.4); }
+        .planet-2 { width: 120px; height: 120px; background: radial-gradient(circle at 35% 30%, #74b9ff, #0984e3); top: 60%; right: 5%; animation-duration: 30s; animation-delay: -5s; box-shadow: inset -15px -15px 30px rgba(0,0,0,0.4); }
+        .planet-3 { width: 50px; height: 50px; background: radial-gradient(circle at 30% 30%, #fdcb6e, #e17055); bottom: 20%; left: 15%; animation-duration: 18s; animation-delay: -8s; }
+        .planet-4 { width: 35px; height: 35px; background: radial-gradient(circle at 30% 30%, #a29bfe, #6c5ce7); top: 25%; right: 20%; animation-duration: 22s; animation-delay: -3s; }
+        @keyframes pFloat { 0%,100% { transform: translateY(0) rotate(0deg); } 25% { transform: translateY(-20px) rotate(2deg); } 50% { transform: translateY(10px) rotate(-1deg); } 75% { transform: translateY(-15px) rotate(1deg); } }
+
+        .scroll-indicator {
+            position: absolute; bottom: 40px; left: 50%;
+            transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            opacity: 0; animation: fadeUp 0.8s ease forwards 2.4s;
+        }
+        .scroll-indicator span { font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text-muted); }
+        .scroll-indicator .arrow {
+            width: 20px; height: 20px;
+            border-right: 1.5px solid var(--text-muted);
+            border-bottom: 1.5px solid var(--text-muted);
+            transform: rotate(45deg); animation: sBounce 2s ease-in-out infinite;
+        }
+        @keyframes sBounce { 0%,100% { transform: rotate(45deg) translateY(0); opacity: 1; } 50% { transform: rotate(45deg) translateY(8px); opacity: 0.3; } }
+
+        /* ═══ SYNOPSIS ═══ */
+        #synopsis { position: relative; z-index: 1; padding: 160px 48px; max-width: 1200px; margin: 0 auto; }
+        .section-label {
+            font-family: var(--font-mono); font-size: 0.65rem; font-weight: 500;
+            letter-spacing: 0.4em; text-transform: uppercase;
+            color: var(--star-gold); margin-bottom: 48px;
+            display: flex; align-items: center; gap: 16px;
+        }
+        .section-label::before { content: ''; width: 40px; height: 1px; background: var(--star-gold); }
+        .synopsis-text {
+            font-family: var(--font-serif); font-size: clamp(1.5rem, 3.5vw, 3rem);
+            line-height: 1.5; color: var(--text-secondary); max-width: 900px;
+        }
+        .synopsis-text .word { display: inline-block; opacity: 0.15; transition: opacity 0.5s; margin-right: 0.25em; }
+        .synopsis-text .word.visible { opacity: 1; }
+        .synopsis-text em { color: var(--star-gold); font-style: italic; }
+        .synopsis-stats {
+            display: flex; gap: 80px; margin-top: 80px;
+            padding-top: 48px; border-top: 1px solid rgba(255,255,255,0.06);
+        }
+        .stat { opacity: 0; transform: translateY(30px); transition: all 0.6s; }
+        .stat.revealed { opacity: 1; transform: translateY(0); }
+        .stat-number { font-family: var(--font-display); font-weight: 800; font-size: 2.5rem; color: var(--mario-red); line-height: 1; }
+        .stat-label { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin-top: 8px; }
+
+        /* ═══ CHARACTERS ═══ */
+        #characters { position: relative; z-index: 1; padding: 160px 48px; }
+        .characters-header { text-align: center; margin-bottom: 80px; }
+        .characters-title {
+            font-family: var(--font-display); font-weight: 800;
+            font-size: clamp(2.5rem, 6vw, 5rem); text-transform: uppercase;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--text-primary), var(--text-muted));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .characters-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; max-width: 1200px; margin: 0 auto; }
+        .char-card {
+            position: relative; background: var(--bg-card); border-radius: 16px;
+            padding: 48px 32px; overflow: hidden;
+            transition: transform 0.1s; transform-style: preserve-3d;
+            will-change: transform; opacity: 0; transform: translateY(60px);
+        }
+        .char-card.revealed { opacity: 1; transform: translateY(0); transition: opacity 0.8s, transform 0.8s; }
+        .char-card::before {
+            content: ''; position: absolute; inset: 0; border-radius: 16px; padding: 1px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+        }
+        .char-card .shine {
+            position: absolute; inset: 0; border-radius: 16px; pointer-events: none;
+            opacity: 0; transition: opacity 0.3s;
+            background: radial-gradient(circle 300px at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.06), transparent);
+        }
+        .char-card:hover .shine { opacity: 1; }
+        .char-orb {
+            width: 100px; height: 100px; border-radius: 50%;
+            margin: 0 auto 32px; position: relative;
+            animation: orbPulse 4s ease-in-out infinite;
+        }
+        .char-orb::after {
+            content: ''; position: absolute; inset: -10px; border-radius: 50%;
+            background: inherit; filter: blur(25px); opacity: 0.4;
+        }
+        @keyframes orbPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+        .char-orb.mario { background: radial-gradient(circle at 35% 35%, #ff8a80, var(--mario-red), #8b0000); }
+        .char-orb.luigi { background: radial-gradient(circle at 35% 35%, #a5d6a7, var(--luigi-green), #1b5e20); }
+        .char-orb.peach { background: radial-gradient(circle at 35% 35%, #ffcdd2, var(--peach-pink), #e91e63); }
+        .char-orb.rosalina { background: radial-gradient(circle at 35% 35%, #e0f7fa, var(--rosalina-blue), #0277bd); }
+        .char-orb.bowser { background: radial-gradient(circle at 35% 35%, #ffcc80, var(--bowser-orange), #bf360c); }
+        .char-orb.toad { background: radial-gradient(circle at 35% 35%, #ef9a9a, var(--toad-red), #7f0000); }
+        .char-name { font-family: var(--font-display); font-weight: 700; font-size: 1.4rem; text-align: center; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .char-role { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); text-align: center; margin-bottom: 20px; }
+        .char-desc { font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.7; color: var(--text-secondary); text-align: center; }
+        .char-emoji { position: absolute; top: 16px; right: 20px; font-size: 1.8rem; opacity: 0.3; }
+
+        /* ═══ WORLDS ═══ */
+        #worlds { position: relative; z-index: 1; height: 400vh; }
+        .worlds-sticky { position: sticky; top: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
+        .worlds-header { padding: 0 48px; margin-bottom: 40px; }
+        .worlds-title { font-family: var(--font-display); font-weight: 800; font-size: clamp(2rem, 5vw, 4rem); text-transform: uppercase; letter-spacing: -0.02em; }
+        .worlds-title span { color: var(--star-gold); }
+        .worlds-track { display: flex; gap: 32px; padding: 0 48px; will-change: transform; }
+        .world-card {
+            min-width: 500px; height: 380px; border-radius: 20px;
+            position: relative; overflow: hidden; flex-shrink: 0;
+            display: flex; flex-direction: column; justify-content: flex-end;
+            padding: 40px; transition: transform 0.3s;
+        }
+        .world-card:hover { transform: scale(1.02); }
+        .world-card .world-bg { position: absolute; inset: 0; z-index: 0; }
+        .world-card .world-content { position: relative; z-index: 1; }
+        .world-card .world-number { font-family: var(--font-display); font-weight: 800; font-size: 6rem; line-height: 1; opacity: 0.15; position: absolute; top: 20px; right: 30px; }
+        .world-card .world-name { font-family: var(--font-display); font-weight: 800; font-size: 1.8rem; text-transform: uppercase; margin-bottom: 8px; }
+        .world-card .world-desc { font-family: var(--font-mono); font-size: 0.8rem; color: rgba(255,255,255,0.7); line-height: 1.6; }
+        .world-card.w1 .world-bg { background: linear-gradient(135deg, #0c1445, #1a237e, #283593); }
+        .world-card.w1 { border: 1px solid rgba(91, 155, 213, 0.3); }
+        .world-card.w2 .world-bg { background: linear-gradient(135deg, #4a148c, #7b1fa2, #ce93d8); }
+        .world-card.w2 { border: 1px solid rgba(206, 147, 216, 0.3); }
+        .world-card.w3 .world-bg { background: linear-gradient(135deg, #004d40, #00695c, #1b5e20); }
+        .world-card.w3 { border: 1px solid rgba(57, 181, 74, 0.3); }
+        .world-card.w4 .world-bg { background: linear-gradient(135deg, #bf360c, #e65100, #ff6d00); }
+        .world-card.w4 { border: 1px solid rgba(255, 102, 0, 0.3); }
+        .world-card.w5 .world-bg { background: linear-gradient(135deg, #1a237e, #4a148c, #880e4f); }
+        .world-card.w5 { border: 1px solid rgba(136, 14, 79, 0.3); }
+        .world-card.w6 .world-bg { background: linear-gradient(135deg, #212121, #424242, #e52521); }
+        .world-card.w6 { border: 1px solid rgba(229, 37, 33, 0.3); }
+        .world-orb { position: absolute; border-radius: 50%; opacity: 0.3; }
+        .world-card.w1 .world-orb { width: 200px; height: 200px; background: radial-gradient(circle, #5b9bd5, transparent); top: -40px; right: -40px; }
+        .world-card.w2 .world-orb { width: 150px; height: 150px; background: radial-gradient(circle, #e1bee7, transparent); bottom: -30px; left: -30px; }
+        .world-card.w4 .world-orb { width: 180px; height: 180px; background: radial-gradient(circle, #ffab91, transparent); top: -50px; left: 50%; }
+
+        /* ═══ TRAILER ═══ */
+        #trailer { position: relative; z-index: 1; padding: 160px 48px; display: flex; flex-direction: column; align-items: center; }
+        .trailer-wrapper {
+            position: relative; width: 100%; max-width: 1000px;
+            aspect-ratio: 16/9; border-radius: 12px; overflow: hidden;
+            background: var(--bg-card); border: 1px solid rgba(255,255,255,0.08);
+            cursor: none; transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .trailer-wrapper:hover { transform: scale(1.01); box-shadow: 0 0 80px rgba(229,37,33,0.15); }
+        .trailer-bg {
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse at 30% 40%, rgba(229,37,33,0.2), transparent 60%),
+                        radial-gradient(ellipse at 70% 60%, rgba(123,47,190,0.2), transparent 60%), var(--bg-surface);
+        }
+        .trailer-play {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 90px; height: 90px; border-radius: 50%; background: var(--mario-red);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 0 0 var(--mario-red-glow);
+            animation: playPulse 2s ease-in-out infinite; z-index: 2;
+        }
+        .trailer-play::before { content: ''; width: 0; height: 0; border-style: solid; border-width: 14px 0 14px 24px; border-color: transparent transparent transparent white; margin-left: 4px; }
+        @keyframes playPulse { 0% { box-shadow: 0 0 0 0 var(--mario-red-glow); } 70% { box-shadow: 0 0 0 30px rgba(229,37,33,0); } 100% { box-shadow: 0 0 0 0 rgba(229,37,33,0); } }
+        .trailer-label { position: absolute; bottom: 24px; left: 24px; font-family: var(--font-display); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); z-index: 2; }
+        .trailer-duration { position: absolute; bottom: 24px; right: 24px; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); z-index: 2; }
+        .trailer-stars { position: absolute; inset: 0; z-index: 1; overflow: hidden; }
+        .trailer-star { position: absolute; width: 3px; height: 3px; background: white; border-radius: 50%; animation: twinkle 3s ease-in-out infinite; }
+        @keyframes twinkle { 0%,100% { opacity: 0.2; } 50% { opacity: 0.8; } }
+        .trailer-text { margin-top: 40px; text-align: center; }
+        .trailer-text h3 { font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+        .trailer-text p { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); }
+
+        /* ═══ CAST ═══ */
+        #cast { position: relative; z-index: 1; padding: 160px 0; overflow: hidden; }
+        .cast-header { padding: 0 48px; margin-bottom: 60px; }
+        .cast-title { font-family: var(--font-display); font-weight: 800; font-size: clamp(2rem, 5vw, 4rem); text-transform: uppercase; }
+        .marquee { display: flex; width: max-content; animation: mScroll 30s linear infinite; }
+        .marquee:hover { animation-play-state: paused; }
+        .marquee-content { display: flex; gap: 48px; padding: 0 24px; align-items: center; }
+        .marquee-item {
+            font-family: var(--font-display); font-weight: 700; font-size: 1.2rem;
+            text-transform: uppercase; letter-spacing: 0.1em; white-space: nowrap;
+            color: var(--text-muted); transition: color 0.3s;
+            display: flex; align-items: center; gap: 16px;
+        }
+        .marquee-item:hover { color: var(--text-primary); }
+        .marquee-dot { width: 6px; height: 6px; background: var(--mario-red); border-radius: 50%; flex-shrink: 0; }
+        @keyframes mScroll { to { transform: translateX(-50%); } }
+        .cast-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding: 60px 48px 0; max-width: 1200px; margin: 0 auto; }
+        .cast-card {
+            background: var(--bg-card); border-radius: 12px; padding: 28px 24px;
+            border: 1px solid rgba(255,255,255,0.05);
+            opacity: 0; transform: translateY(40px); transition: all 0.6s;
+        }
+        .cast-card.revealed { opacity: 1; transform: translateY(0); }
+        .cast-card:hover { border-color: rgba(255,200,50,0.2); transform: translateY(-4px); }
+        .cast-card-name { font-family: var(--font-display); font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+        .cast-card-role { font-family: var(--font-serif); font-style: italic; font-size: 0.85rem; color: var(--star-gold); margin-bottom: 8px; }
+        .cast-card-desc { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); line-height: 1.6; }
+
+        /* ═══ FOOTER ═══ */
+        footer { position: relative; z-index: 1; padding: 80px 48px 40px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .footer-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 60px; flex-wrap: wrap; gap: 40px; }
+        .footer-brand { max-width: 300px; }
+        .footer-logo { font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; text-transform: uppercase; margin-bottom: 12px; }
+        .footer-logo span { color: var(--star-gold); }
+        .footer-tagline { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); line-height: 1.7; }
+        .footer-newsletter { max-width: 400px; }
+        .footer-newsletter h4 { font-family: var(--font-display); font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+        .newsletter-form { display: flex; gap: 8px; }
+        .newsletter-form input {
+            flex: 1; background: var(--bg-surface); border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px 16px; font-family: var(--font-mono); font-size: 0.75rem;
+            color: var(--text-primary); outline: none; transition: border-color 0.3s; border-radius: 4px;
+        }
+        .newsletter-form input::placeholder { color: var(--text-muted); }
+        .newsletter-form input:focus { border-color: var(--star-gold); }
+        .newsletter-form button {
+            background: var(--mario-red); border: none; padding: 12px 24px;
+            font-family: var(--font-display); font-weight: 700; font-size: 0.7rem;
+            letter-spacing: 0.1em; text-transform: uppercase; color: white;
+            transition: background 0.3s; border-radius: 4px;
+        }
+        .newsletter-form button:hover { background: #c61e1b; }
+        .footer-links { display: flex; gap: 60px; }
+        .footer-col h5 { font-family: var(--font-display); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 16px; color: var(--text-secondary); }
+        .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+        .footer-col a { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); transition: color 0.3s; }
+        .footer-col a:hover { color: var(--star-gold); }
+        .footer-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 32px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .footer-copy { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); }
+        .footer-social { display: flex; gap: 20px; }
+        .footer-social a {
+            width: 36px; height: 36px; border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; color: var(--text-muted); transition: all 0.3s;
+        }
+        .footer-social a:hover { border-color: var(--star-gold); color: var(--star-gold); transform: translateY(-2px); }
+
+        /* ═══ TRAILER MODAL ═══ */
+        #trailer-modal {
+            position: fixed; inset: 0; z-index: 100002;
+            background: rgba(5,5,16,0.95); backdrop-filter: blur(20px);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; transition: all 0.4s;
+        }
+        #trailer-modal.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            width: 90%; max-width: 900px; aspect-ratio: 16/9;
+            background: var(--bg-surface); border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1); position: relative;
+            display: flex; align-items: center; justify-content: center;
+            transform: scale(0.9); transition: transform 0.4s; overflow: hidden;
+        }
+        #trailer-modal.active .modal-content { transform: scale(1); }
+        .modal-close {
+            position: absolute; top: -50px; right: 0;
+            background: none; border: none; color: var(--text-muted);
+            font-family: var(--font-mono); font-size: 0.75rem;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            display: flex; align-items: center; gap: 8px; transition: color 0.3s;
+        }
+        .modal-close:hover { color: var(--text-primary); }
+        .modal-close .x { font-size: 1.2rem; }
+        .modal-trailer-visual { text-align: center; }
+        .modal-trailer-visual .big-star { font-size: 4rem; animation: corePulse 2s ease-in-out infinite; display: block; margin-bottom: 20px; }
+        .modal-trailer-visual p { font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
+        .modal-trailer-visual span { display: block; font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; opacity: 0.5; }
+
+        /* ═══ CLICK BURST ═══ */
+        .click-burst { position: fixed; pointer-events: none; z-index: 99997; }
+        .burst-particle {
+            position: absolute; width: 4px; height: 4px;
+            background: var(--star-gold); border-radius: 50%;
+            animation: burstOut 0.6s ease-out forwards;
+        }
+        @keyframes burstOut { 0% { opacity: 1; transform: translate(0,0) scale(1); } 100% { opacity: 0; transform: translate(var(--bx), var(--by)) scale(0); } }
+
+        /* ═══ RESPONSIVE ═══ */
+        @media (max-width: 1024px) {
+            .characters-grid { grid-template-columns: repeat(2, 1fr); }
+            .cast-grid { grid-template-columns: repeat(2, 1fr); }
+            .world-card { min-width: 380px; height: 320px; }
+        }
+        @media (max-width: 768px) {
+            nav { padding: 16px 24px; }
+            .nav-links { display: none; }
+            #hero { padding: 0 24px; }
+            #synopsis { padding: 100px 24px; }
+            .synopsis-stats { flex-wrap: wrap; gap: 40px; }
+            .characters-grid { grid-template-columns: 1fr; max-width: 400px; }
+            .world-card { min-width: 300px; height: 280px; }
+            .cast-grid { grid-template-columns: 1fr; }
+            footer { padding: 60px 24px 30px; }
+            .footer-top { flex-direction: column; }
+            .footer-links { gap: 32px; flex-wrap: wrap; }
+            body { cursor: auto; }
+            #cursor, #cursor-follower { display: none; }
+            #gravity-btn, #audio-btn, #constellation-btn { bottom: 80px; }
+            #audio-btn { left: 24px; bottom: 130px; }
+            #constellation-btn { left: 24px; bottom: 180px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LOADER -->
+    <div id="loader">
+        <div class="loader-galaxy">
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="ring"></div>
+            <div class="core"></div>
+        </div>
+        <div class="loader-text">Entrando na galáxia</div>
+    </div>
+
+    <!-- CUSTOM CURSOR -->
+    <div id="cursor"></div>
+    <div id="cursor-follower"></div>
+
+    <!-- CANVAS STARFIELD -->
+    <canvas id="starfield"></canvas>
+
+    <!-- CONSTELLATION CANVAS -->
+    <canvas id="constellation-canvas"></canvas>
+
+    <!-- SCROLL PROGRESS -->
+    <div class="scroll-progress" id="scrollProgress"></div>
+
+    <!-- ★ STAR POWER HUD -->
+    <div id="star-hud">
+        <div class="hud-star"></div>
+        <div class="hud-count" id="hudCount">0</div>
+        <div>
+            <div class="hud-label">Star Power</div>
+            <div class="hud-bar"><div class="hud-bar-fill" id="hudBar"></div></div>
+        </div>
+    </div>
+
+    <!-- ★ GRAVITY FLIP -->
+    <button id="gravity-btn">
+        <span class="grav-icon">⇅</span> Gravidade
+    </button>
+
+    <!-- ★ AUDIO ENGINE -->
+    <button id="audio-btn">
+        <div class="audio-bars">
+            <span style="height:5px"></span>
+            <span style="height:8px"></span>
+            <span style="height:4px"></span>
+            <span style="height:7px"></span>
+        </div>
+        Cosmos Audio
+    </button>
+
+    <!-- ★ CONSTELLATION -->
+    <button id="constellation-btn">
+        ✦ Constelações
+    </button>
+
+    <!-- ★ GALAXY WARP -->
+    <div id="warp-overlay"></div>
+
+    <!-- ★ KONAMI TOAST -->
+    <div id="konami-toast">
+        <span class="konami-star">⭐</span>
+        <h3>Star Power Máximo!</h3>
+        <p>Você desbloqueou o segredo da galáxia</p>
+    </div>
+
+    <!-- NAVIGATION -->
+    <nav id="mainNav">
+        <div class="nav-logo">
+            <div class="star-icon"></div>
+            SMG O Filme
+        </div>
+        <ul class="nav-links">
+            <li><a href="#synopsis" class="nav-link warp-link">Sinopse</a></li>
+            <li><a href="#characters" class="nav-link warp-link">Personagens</a></li>
+            <li><a href="#worlds" class="nav-link warp-link">Galáxias</a></li>
+            <li><a href="#trailer" class="nav-link warp-link">Trailer</a></li>
+            <li><a href="#cast" class="nav-link warp-link">Elenco</a></li>
+        </ul>
+        <button class="nav-cta magnetic">Ingressos</button>
+    </nav>
+
+    <!-- MAIN -->
+    <main>
+        <!-- HERO -->
+        <section id="hero">
+            <div class="hero-bg-glow glow-1"></div>
+            <div class="hero-bg-glow glow-2"></div>
+            <div class="hero-bg-glow glow-3"></div>
+            <div class="hero-planets">
+                <div class="planet planet-1"></div>
+                <div class="planet planet-2"></div>
+                <div class="planet planet-3"></div>
+                <div class="planet planet-4"></div>
+            </div>
+            <div id="planet-3d-container">
+                <div id="planet-3d">
+                    <div class="planet-surface">
+                        <div class="crater" style="width:30px;height:30px;top:20%;left:15%;"></div>
+                        <div class="crater" style="width:18px;height:18px;top:50%;left:60%;"></div>
+                        <div class="crater" style="width:24px;height:24px;top:70%;left:30%;"></div>
+                        <div class="crater" style="width:14px;height:14px;top:35%;left:75%;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-preface">Nintendo & Illumination Apresentam</div>
+            <h1 class="hero-title">
+                <span class="line line-mario" id="titleLine1"></span>
+                <span class="line line-galaxy" id="titleLine2"></span>
+            </h1>
+            <div class="hero-subtitle">Uma aventura além das estrelas</div>
+            <div class="hero-date">Estreia — Dezembro 2026</div>
+            <div class="scroll-indicator">
+                <span>Explorar</span>
+                <div class="arrow"></div>
+            </div>
+        </section>
+
+        <!-- SYNOPSIS -->
+        <section id="synopsis">
+            <div class="section-label">Sobre o Filme</div>
+            <div class="synopsis-text" id="synopsisText">
+                Quando uma <em>força misteriosa</em> ameaça despedaçar o tecido do universo,
+                Mario e seus amigos devem viajar além do reino conhecido, atravessando
+                <em>galáxias inexploradas</em> e enfrentando desafios cósmicos jamais vistos.
+                Com a ajuda da enigmática <em>Rosalina</em> e o poder das Grandes Estrelas,
+                eles descobrirão que a verdadeira força do universo reside na
+                <em>coragem</em> e nos laços que nos unem.
+            </div>
+            <div class="synopsis-stats">
+                <div class="stat" data-delay="0"><div class="stat-number">6</div><div class="stat-label">Galáxias</div></div>
+                <div class="stat" data-delay="100"><div class="stat-number">120+</div><div class="stat-label">Minutos</div></div>
+                <div class="stat" data-delay="200"><div class="stat-number">8</div><div class="stat-label">Personagens</div></div>
+                <div class="stat" data-delay="300"><div class="stat-number">∞</div><div class="stat-label">Estrelas</div></div>
+            </div>
+        </section>
+
+        <!-- CHARACTERS -->
+        <section id="characters">
+            <div class="characters-header">
+                <div class="section-label" style="justify-content:center;">
+                    <span style="width:40px;height:1px;background:var(--star-gold);display:inline-block;"></span>
+                    Elenco de Heróis & Vilões
+                    <span style="width:40px;height:1px;background:var(--star-gold);display:inline-block;"></span>
+                </div>
+                <h2 class="characters-title">Personagens</h2>
+            </div>
+            <div class="characters-grid">
+                <div class="char-card magnetic" data-delay="0"><div class="shine"></div><div class="char-emoji">⭐</div><div class="char-orb mario"></div><div class="char-name">Mario</div><div class="char-role">O Herói Estelar</div><div class="char-desc">O encanador mais famoso do universo agora enfrenta seu maior desafio: salvar a galáxia inteira.</div></div>
+                <div class="char-card magnetic" data-delay="100"><div class="shine"></div><div class="char-emoji">🌟</div><div class="char-orb luigi"></div><div class="char-name">Luigi</div><div class="char-role">O Irmão Corajoso</div><div class="char-desc">Mesmo com medo do escuro, Luigi provará que a verdadeira coragem nasce nas estrelas.</div></div>
+                <div class="char-card magnetic" data-delay="200"><div class="shine"></div><div class="char-emoji">👑</div><div class="char-orb peach"></div><div class="char-name">Princesa Peach</div><div class="char-role">Governante Cósmica</div><div class="char-desc">Com poderes estelares despertos, Peach lidera a jornada através das galáxias.</div></div>
+                <div class="char-card magnetic" data-delay="300"><div class="shine"></div><div class="char-emoji">🌙</div><div class="char-orb rosalina"></div><div class="char-name">Rosalina</div><div class="char-role">Guardiã do Cometa</div><div class="char-desc">A misteriosa protetora do Observatório Cometa guarda segredos sobre a origem do universo.</div></div>
+                <div class="char-card magnetic" data-delay="400"><div class="shine"></div><div class="char-emoji">🔥</div><div class="char-orb bowser"></div><div class="char-name">Bowser</div><div class="char-role">Rei Koopa Galáctico</div><div class="char-desc">Com ambições que transcendem mundos, Bowser busca o controle de toda a galáxia.</div></div>
+                <div class="char-card magnetic" data-delay="500"><div class="shine"></div><div class="char-emoji">🍄</div><div class="char-orb toad"></div><div class="char-name">Toad</div><div class="char-role">Explorador Estelar</div><div class="char-desc">O pequeno Toad será a arma secreta em uma missão que salvará todas as galáxias.</div></div>
+            </div>
+        </section>
+
+        <!-- WORLDS -->
+        <section id="worlds">
+            <div class="worlds-sticky">
+                <div class="worlds-header">
+                    <div class="section-label">Explore os Mundos</div>
+                    <h2 class="worlds-title">Galáxias do <span>Universo</span></h2>
+                </div>
+                <div class="worlds-track" id="worldsTrack">
+                    <div class="world-card w1"><div class="world-bg"></div><div class="world-orb"></div><div class="world-number">01</div><div class="world-content"><div class="world-name">Observatório Cometa</div><div class="world-desc">O ponto de partida entre mundos. Aqui, Rosalina guarda os segredos do cosmos e o mapa de todas as galáxias.</div></div></div>
+                    <div class="world-card w2"><div class="world-bg"></div><div class="world-orb"></div><div class="world-number">02</div><div class="world-content"><div class="world-name">Galáxia Bubble Blast</div><div class="world-desc">Ondas de bolhas cósmicas flutuam entre plataformas cristalinas. Cada bolha esconde uma Estrela Grande.</div></div></div>
+                    <div class="world-card w3"><div class="world-bg"></div><div class="world-orb"></div><div class="world-number">03</div><div class="world-content"><div class="world-name">Planeta Fantasma</div><div class="world-desc">Segredos escondidos na névoa verde. Luigi deve superar seus maiores medos neste mundo assombrado.</div></div></div>
+                    <div class="world-card w4"><div class="world-bg"></div><div class="world-orb"></div><div class="world-number">04</div><div class="world-content"><div class="world-name">Estação Koopa</div><div class="world-desc">O domínio de Bowser nas estrelas. Uma fortaleza colossal de lava e metal flutuando no espaço.</div></div></div>
+                    <div class="world-card w5"><div class="world-bg"></div><div class="world-orb"></div><div class="world-number">05</div><div class="world-content"><div class="world-name">Jardim das Estrelas</div><div class="world-desc">Onde nascem novas constelações. Um paraíso luminoso que guarda a essência do universo.</div></div></div>
+                    <div class="world-card w6"><div class="world-bg"></div><div class="world-orb"></div><div class="world-number">06</div><div class="world-content"><div class="world-name">Núcleo Galáctico</div><div class="world-desc">O coração do universo. A batalha final acontece aqui, onde tudo começou e onde tudo pode acabar.</div></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TRAILER -->
+        <section id="trailer">
+            <div class="section-label">Assista Agora</div>
+            <div class="trailer-wrapper magnetic" id="trailerTrigger">
+                <div class="trailer-bg"></div>
+                <div class="trailer-stars" id="trailerStars"></div>
+                <div class="trailer-play"></div>
+                <div class="trailer-label">Trailer Oficial</div>
+                <div class="trailer-duration">2:47</div>
+            </div>
+            <div class="trailer-text">
+                <h3>Trailer Oficial — Primeiro Olhar</h3>
+                <p>A galáxia nunca mais será a mesma.</p>
+            </div>
+        </section>
+
+        <!-- CAST -->
+        <section id="cast">
+            <div class="cast-header">
+                <div class="section-label">Elenco & Equipe</div>
+                <h2 class="cast-title">Vozes das <span style="color:var(--star-gold)">Estrelas</span></h2>
+            </div>
+            <div class="marquee" id="marquee">
+                <div class="marquee-content">
+                    <div class="marquee-item"><span class="marquee-dot"></span>Chris Pratt</div>
+                    <div class="marquee-item"><span class="marquee-dot"></span>Anya Taylor-Joy</div>
+                    <div class="marquee-item"><span class="marquee-dot"></span>Charlie Day</div>
+                    <div class="marquee-item"><span class="marquee-dot"></span>Jack Black</div>
+                    <div class="marquee-item"><span class="marquee-dot"></span>Keegan-Michael Key</div>
+                    <div class="marquee-item"><span class="marquee-dot"></span>Lance Reddick</div>
+                    <div class="marquee-item"><span class="marquee-dot"></span>Cate Blanchett</div>
+                    <div class="marquee-item"><span class="marquee-dot"></span>Seth Rogen</div>
+                </div>
+                <div class="marquee-content" aria-hidden="true">
+                    <div class="marquee-item"><span class="marquee-dot"></span>Chris Pratt</div>
+                    <div class="marquee-item"><span class="marquee-dot"></span>Anya Taylor-Joy</div>
+                    <div class="marquee-item"><span class="marquee-dot"></span>Charlie Day</div>
+                    <div class="marquee-item"><span class="marquee-dot"></span>Jack Black</div>
+                    <div class="marquee-item"><span class="marquee-dot"></span>Keegan-Michael Key</div>
+                    <div class="marquee-item"><span class="marquee-dot"></span>Lance Reddick</div>
+                    <div class="marquee-item"><span class="marquee-dot"></span>Cate Blanchett</div>
+                    <div class="marquee-item"><span class="marquee-dot"></span>Seth Rogen</div>
+                </div>
+            </div>
+            <div class="cast-grid">
+                <div class="cast-card" data-delay="0"><div class="cast-card-name">Chris Pratt</div><div class="cast-card-role">Mario</div><div class="cast-card-desc">O herói que une coragem e coração em uma jornada galáctica.</div></div>
+                <div class="cast-card" data-delay="100"><div class="cast-card-name">Charlie Day</div><div class="cast-card-role">Luigi</div><div class="cast-card-desc">O irmão que descobre que a coragem é uma escolha.</div></div>
+                <div class="cast-card" data-delay="200"><div class="cast-card-name">Anya Taylor-Joy</div><div class="cast-card-role">Princesa Peach</div><div class="cast-card-desc">A líder que transforma bondade em poder cósmico.</div></div>
+                <div class="cast-card" data-delay="300"><div class="cast-card-name">Cate Blanchett</div><div class="cast-card-role">Rosalina</div><div class="cast-card-desc">A guardiã etérea cuja voz ecoa entre as estrelas.</div></div>
+                <div class="cast-card" data-delay="400"><div class="cast-card-name">Jack Black</div><div class="cast-card-role">Bowser</div><div class="cast-card-desc">O vilão carismático com ambições galácticas.</div></div>
+                <div class="cast-card" data-delay="500"><div class="cast-card-name">Keegan-Michael Key</div><div class="cast-card-role">Toad</div><div class="cast-card-desc">O companheiro leal cujo entusiasmo é cósmico.</div></div>
+                <div class="cast-card" data-delay="600"><div class="cast-card-name">Seth Rogen</div><div class="cast-card-role">Donkey Kong</div><div class="cast-card-desc">Força bruta e humor para a equipe galáctica.</div></div>
+                <div class="cast-card" data-delay="700"><div class="cast-card-name">Lance Reddick</div><div class="cast-card-role">Kamek</div><div class="cast-card-desc">O mago sombrio que ameaça o equilíbrio cósmico.</div></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-top">
+            <div class="footer-brand">
+                <div class="footer-logo">Super Mario <span>Galaxy</span></div>
+                <div class="footer-tagline">A aventura mais épica do universo Mario. Produzida por Nintendo e Illumination.</div>
+            </div>
+            <div class="footer-newsletter">
+                <h4>Receba Novidades</h4>
+                <form class="newsletter-form" onsubmit="event.preventDefault();">
+                    <input type="email" placeholder="seu@email.com">
+                    <button type="submit">Enviar</button>
+                </form>
+            </div>
+            <div class="footer-links">
+                <div class="footer-col"><h5>Filme</h5><ul><li><a href="#synopsis">Sinopse</a></li><li><a href="#trailer">Trailer</a></li><li><a href="#cast">Elenco</a></li></ul></div>
+                <div class="footer-col"><h5>Universo</h5><ul><li><a href="#characters">Personagens</a></li><li><a href="#worlds">Galáxias</a></li></ul></div>
+                <div class="footer-col"><h5>Studio</h5><ul><li><a href="#">Nintendo</a></li><li><a href="#">Illumination</a></li></ul></div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="footer-copy">&copy; 2026 Nintendo / Illumination Entertainment. Projeto conceitual.</div>
+            <div class="footer-social">
+                <a href="#">&#120143;</a><a href="#">&#9733;</a><a href="#">&#9654;</a><a href="#">&#9835;</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- TRAILER MODAL -->
+    <div id="trailer-modal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">Fechar <span class="x">&times;</span></button>
+            <div class="modal-trailer-visual">
+                <span class="big-star">&#9733;</span>
+                <p>Trailer em Breve</p>
+                <span>O universo está se preparando para você</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         JAVASCRIPT — ALL FEATURES
+    ═══════════════════════════════════════════════════════════════ -->
+    <script>
+    (function() {
+        'use strict';
+
+        // ═══════════════════════════════════════
+        // ★ INNOVATIVE FEATURE 1: STAR POWER COLLECTION
+        // ═══════════════════════════════════════
+        const StarPower = {
+            count: 0,
+            maxForBar: 50,
+            milestones: [10, 25, 50, 100],
+            stars: [],
+
+            init() {
+                this.hudCount = document.getElementById('hudCount');
+                this.hudBar = document.getElementById('hudBar');
+                this.hud = document.getElementById('star-hud');
+                this.spawnStars();
+            },
+
+            spawnStars() {
+                const count = Math.min(15, Math.max(8, Math.floor(window.innerWidth / 120)));
+                for (let i = 0; i < count; i++) {
+                    setTimeout(() => this.createStar(), i * 800 + Math.random() * 2000);
+                }
+            },
+
+            createStar() {
+                const el = document.createElement('div');
+                el.className = 'collect-star';
+                el.style.left = (5 + Math.random() * 90) + 'vw';
+                el.style.top = (10 + Math.random() * 80) + 'vh';
+                el.style.animationDelay = (Math.random() * 5) + 's';
+                el.style.animationDuration = (4 + Math.random() * 4) + 's';
+
+                const size = 14 + Math.random() * 14;
+                el.style.width = size + 'px';
+                el.style.height = size + 'px';
+
+                const shape = document.createElement('div');
+                shape.className = 'star-shape';
+                el.appendChild(shape);
+
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.collect(el);
+                });
+
+                document.body.appendChild(el);
+                this.stars.push(el);
+            },
+
+            collect(el) {
+                if (el.classList.contains('collected')) return;
+                el.classList.add('collected');
+
+                this.count++;
+                this.updateHUD();
+
+                // Burst effect at star position
+                this.burstAt(el.getBoundingClientRect());
+
+                // Respawn after delay
+                setTimeout(() => {
+                    el.remove();
+                    this.stars = this.stars.filter(s => s !== el);
+                    this.createStar();
+                }, 600);
+            },
+
+            burstAt(rect) {
+                const burst = document.createElement('div');
+                burst.className = 'click-burst';
+                burst.style.left = (rect.left + rect.width / 2) + 'px';
+                burst.style.top = (rect.top + rect.height / 2) + 'px';
+                for (let i = 0; i < 10; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'burst-particle';
+                    const angle = (Math.PI * 2 / 10) * i;
+                    const dist = 25 + Math.random() * 35;
+                    p.style.setProperty('--bx', Math.cos(angle) * dist + 'px');
+                    p.style.setProperty('--by', Math.sin(angle) * dist + 'px');
+                    p.style.background = ['#ffc832', '#e52521', '#fff'][Math.floor(Math.random() * 3)];
+                    burst.appendChild(p);
+                }
+                document.body.appendChild(burst);
+                setTimeout(() => burst.remove(), 700);
+            },
+
+            updateHUD() {
+                this.hudCount.textContent = this.count;
+                this.hudCount.classList.add('bump');
+                setTimeout(() => this.hudCount.classList.remove('bump'), 200);
+
+                const barPct = Math.min(100, (this.count / this.maxForBar) * 100);
+                this.hudBar.style.width = barPct + '%';
+
+                // Milestone check
+                if (this.milestones.includes(this.count)) {
+                    this.milestoneEffect();
+                }
+            },
+
+            milestoneEffect() {
+                // Flash
+                const flash = document.createElement('div');
+                flash.className = 'milestone-flash';
+                document.body.appendChild(flash);
+                setTimeout(() => flash.remove(), 1000);
+
+                // HUD glow
+                this.hud.classList.add('level-up');
+                setTimeout(() => this.hud.classList.remove('level-up'), 2000);
+            }
+        };
+
+        // ═══════════════════════════════════════
+        // ★ INNOVATIVE FEATURE 2: GRAVITY FLIP
+        // ═══════════════════════════════════════
+        const GravityFlip = {
+            active: false,
+
+            init() {
+                this.btn = document.getElementById('gravity-btn');
+                this.btn.addEventListener('click', () => this.toggle());
+            },
+
+            toggle() {
+                this.active = !this.active;
+                document.body.classList.toggle('gravity-flipped', this.active);
+                this.btn.classList.toggle('active', this.active);
+
+                // Also flip star positions
+                if (this.active) {
+                    StarPower.stars.forEach(s => {
+                        if (!s.classList.contains('collected')) {
+                            s.style.animationDirection = 'reverse';
+                        }
+                    });
+                } else {
+                    StarPower.stars.forEach(s => {
+                        s.style.animationDirection = 'normal';
+                    });
+                }
+            }
+        };
+
+        // ═══════════════════════════════════════
+        // ★ INNOVATIVE FEATURE 3: GALAXY WARP NAVIGATION
+        // ═══════════════════════════════════════
+        const GalaxyWarp = {
+            overlay: null,
+            isWarping: false,
+
+            init() {
+                this.overlay = document.getElementById('warp-overlay');
+                document.querySelectorAll('.warp-link').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        if (this.isWarping) return;
+                        const target = document.querySelector(link.getAttribute('href'));
+                        if (target) this.warpTo(target, e);
+                    });
+                });
+            },
+
+            warpTo(target, e) {
+                this.isWarping = true;
+                this.overlay.innerHTML = '';
+
+                // Create rings from click position
+                const x = e ? e.clientX : window.innerWidth / 2;
+                const y = e ? e.clientY : window.innerHeight / 2;
+
+                // Center flash
+                const center = document.createElement('div');
+                center.className = 'warp-center';
+                center.style.left = x + 'px';
+                center.style.top = y + 'px';
+                this.overlay.appendChild(center);
+
+                // Expanding rings
+                for (let i = 0; i < 5; i++) {
+                    const ring = document.createElement('div');
+                    ring.className = 'warp-ring';
+                    ring.style.left = x + 'px';
+                    ring.style.top = y + 'px';
+                    ring.style.width = (100 + i * 60) + 'px';
+                    ring.style.height = (100 + i * 60) + 'px';
+                    ring.style.borderColor = ['var(--star-gold)', 'var(--mario-red)', 'var(--nebula-cyan)', 'var(--cosmic-purple)', 'var(--star-gold)'][i];
+                    ring.style.animationDelay = (i * 0.08) + 's';
+                    this.overlay.appendChild(ring);
+                }
+
+                this.overlay.classList.add('active');
+
+                // Trigger animations
+                requestAnimationFrame(() => {
+                    center.classList.add('animating');
+                    this.overlay.querySelectorAll('.warp-ring').forEach(r => r.classList.add('animating'));
+                });
+
+                // Scroll during warp
+                setTimeout(() => {
+                    target.scrollIntoView({ behavior: 'auto', block: 'start' });
+                }, 350);
+
+                // Cleanup
+                setTimeout(() => {
+                    this.overlay.classList.remove('active');
+                    this.overlay.innerHTML = '';
+                    this.isWarping = false;
+                }, 900);
+            }
+        };
+
+        // ═══════════════════════════════════════
+        // ★ INNOVATIVE FEATURE 4: 3D INTERACTIVE PLANET
+        // ═══════════════════════════════════════
+        const Planet3D = {
+            el: null,
+            container: null,
+
+            init() {
+                this.el = document.getElementById('planet-3d');
+                this.container = document.getElementById('planet-3d-container');
+                if (!this.el) return;
+
+                document.addEventListener('mousemove', (e) => {
+                    const cx = window.innerWidth / 2;
+                    const cy = window.innerHeight / 2;
+                    const rx = ((e.clientY - cy) / cy) * 20;
+                    const ry = ((e.clientX - cx) / cx) * 20;
+                    this.el.style.transform = `rotateX(${-rx}deg) rotateY(${ry}deg)`;
+                });
+            }
+        };
+
+        // ═══════════════════════════════════════
+        // ★ INNOVATIVE FEATURE 5: CONSTELLATION CREATOR
+        // ═══════════════════════════════════════
+        const ConstellationCreator = {
+            active: false,
+            canvas: null,
+            ctx: null,
+            points: [],
+            maxDist: 150,
+
+            init() {
+                this.canvas = document.getElementById('constellation-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+
+                document.getElementById('constellation-btn').addEventListener('click', () => this.toggle());
+
+                this.canvas.addEventListener('click', (e) => {
+                    if (!this.active) return;
+                    this.addPoint(e.clientX, e.clientY);
+                });
+
+                this.animate();
+            },
+
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            },
+
+            toggle() {
+                this.active = !this.active;
+                this.canvas.classList.toggle('active', this.active);
+                document.getElementById('constellation-btn').classList.toggle('active', this.active);
+                if (!this.active) {
+                    this.points = [];
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+            },
+
+            addPoint(x, y) {
+                this.points.push({ x, y, r: 3 + Math.random() * 2, pulse: 0 });
+
+                // Burst
+                const burst = document.createElement('div');
+                burst.className = 'click-burst';
+                burst.style.left = x + 'px';
+                burst.style.top = y + 'px';
+                for (let i = 0; i < 6; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'burst-particle';
+                    const angle = (Math.PI * 2 / 6) * i;
+                    p.style.setProperty('--bx', Math.cos(angle) * 20 + 'px');
+                    p.style.setProperty('--by', Math.sin(angle) * 20 + 'px');
+                    p.style.background = '#a8d8ea';
+                    burst.appendChild(p);
+                }
+                document.body.appendChild(burst);
+                setTimeout(() => burst.remove(), 700);
+            },
+
+            animate() {
+                if (!this.active && this.points.length === 0) {
+                    requestAnimationFrame(() => this.animate());
+                    return;
+                }
+
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Draw connections
+                for (let i = 0; i < this.points.length; i++) {
+                    for (let j = i + 1; j < this.points.length; j++) {
+                        const dx = this.points[i].x - this.points[j].x;
+                        const dy = this.points[i].y - this.points[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < this.maxDist) {
+                            const alpha = 1 - (dist / this.maxDist);
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(this.points[i].x, this.points[i].y);
+                            this.ctx.lineTo(this.points[j].x, this.points[j].y);
+                            this.ctx.strokeStyle = `rgba(168, 216, 234, ${alpha * 0.6})`;
+                            this.ctx.lineWidth = 1;
+                            this.ctx.stroke();
+                        }
+                    }
+                }
+
+                // Draw points
+                const time = Date.now() * 0.003;
+                this.points.forEach((p, i) => {
+                    const pulse = Math.sin(time + i) * 1.5;
+
+                    // Glow
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.r + 8 + pulse, 0, Math.PI * 2);
+                    this.ctx.fillStyle = 'rgba(168, 216, 234, 0.1)';
+                    this.ctx.fill();
+
+                    // Star
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.r + pulse * 0.5, 0, Math.PI * 2);
+                    this.ctx.fillStyle = '#a8d8ea';
+                    this.ctx.fill();
+
+                    // Bright center
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
+                    this.ctx.fillStyle = '#fff';
+                    this.ctx.fill();
+                });
+
+                requestAnimationFrame(() => this.animate());
+            }
+        };
+
+        // ═══════════════════════════════════════
+        // ★ INNOVATIVE FEATURE 6: COSMIC AUDIO ENGINE
+        // ═══════════════════════════════════════
+        const CosmicAudio = {
+            active: false,
+            ctx: null,
+            nodes: [],
+
+            init() {
+                document.getElementById('audio-btn').addEventListener('click', () => this.toggle());
+            },
+
+            toggle() {
+                if (!this.active) {
+                    this.start();
+                } else {
+                    this.stop();
+                }
+                this.active = !this.active;
+                document.getElementById('audio-btn').classList.toggle('active', this.active);
+            },
+
+            start() {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+                // Pad drone
+                const notes = [55, 82.41, 110, 146.83]; // A1, E2, A2, D3
+                notes.forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const filter = this.ctx.createBiquadFilter();
+
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    gain.gain.value = 0;
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 400;
+                    filter.Q.value = 2;
+
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+
+                    // Fade in
+                    gain.gain.linearRampToValueAtTime(0.03, this.ctx.currentTime + 2 + i * 0.5);
+
+                    // Slow LFO on frequency
+                    const lfo = this.ctx.createOscillator();
+                    const lfoGain = this.ctx.createGain();
+                    lfo.frequency.value = 0.1 + i * 0.05;
+                    lfoGain.gain.value = freq * 0.003;
+                    lfo.connect(lfoGain);
+                    lfoGain.connect(osc.frequency);
+                    lfo.start();
+
+                    this.nodes.push({ osc, gain, filter, lfo, lfoGain });
+                });
+
+                // Shimmer
+                const shimmer = this.ctx.createOscillator();
+                const shimmerGain = this.ctx.createGain();
+                const shimmerFilter = this.ctx.createBiquadFilter();
+                shimmer.type = 'triangle';
+                shimmer.frequency.value = 880;
+                shimmerGain.gain.value = 0;
+                shimmerFilter.type = 'bandpass';
+                shimmerFilter.frequency.value = 1000;
+                shimmerFilter.Q.value = 5;
+                shimmer.connect(shimmerFilter);
+                shimmerFilter.connect(shimmerGain);
+                shimmerGain.connect(this.ctx.destination);
+                shimmer.start();
+                shimmerGain.gain.linearRampToValueAtTime(0.008, this.ctx.currentTime + 3);
+                this.nodes.push({ osc: shimmer, gain: shimmerGain, filter: shimmerFilter });
+
+                // Scroll-reactive modulation
+                window.addEventListener('scroll', this._scrollHandler = () => {
+                    if (!this.active || !this.ctx) return;
+                    const progress = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+                    this.nodes.forEach((n, i) => {
+                        if (n.filter) {
+                            n.filter.frequency.linearRampToValueAtTime(
+                                200 + progress * 2000,
+                                this.ctx.currentTime + 0.1
+                            );
+                        }
+                        if (n.gain && i < 4) {
+                            n.gain.gain.linearRampToValueAtTime(
+                                0.02 + progress * 0.03,
+                                this.ctx.currentTime + 0.1
+                            );
+                        }
+                    });
+                });
+            },
+
+            stop() {
+                if (this._scrollHandler) {
+                    window.removeEventListener('scroll', this._scrollHandler);
+                }
+                this.nodes.forEach(n => {
+                    try {
+                        n.gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.5);
+                        setTimeout(() => {
+                            try { n.osc.stop(); } catch(e) {}
+                            try { if (n.lfo) n.lfo.stop(); } catch(e) {}
+                        }, 600);
+                    } catch(e) {}
+                });
+                this.nodes = [];
+                setTimeout(() => {
+                    try { this.ctx.close(); } catch(e) {}
+                    this.ctx = null;
+                }, 800);
+            }
+        };
+
+        // ═══════════════════════════════════════
+        // ★ INNOVATIVE FEATURE 7: KONAMI CODE
+        // ═══════════════════════════════════════
+        const KonamiCode = {
+            sequence: [38,38,40,40,37,39,37,39,66,65],
+            input: [],
+
+            init() {
+                document.addEventListener('keydown', (e) => {
+                    this.input.push(e.keyCode);
+                    if (this.input.length > this.sequence.length) {
+                        this.input.shift();
+                    }
+                    if (this.input.join(',') === this.sequence.join(',')) {
+                        this.activate();
+                        this.input = [];
+                    }
+                });
+            },
+
+            activate() {
+                // Show toast
+                const toast = document.getElementById('konami-toast');
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 3000);
+
+                // Star rain
+                for (let i = 0; i < 60; i++) {
+                    setTimeout(() => {
+                        const star = document.createElement('div');
+                        star.className = 'star-rain-star';
+                        star.style.left = Math.random() * 100 + 'vw';
+                        star.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+                        star.style.animationDelay = '0s';
+                        const size = 8 + Math.random() * 16;
+                        star.style.width = size + 'px';
+                        star.style.height = size + 'px';
+                        document.body.appendChild(star);
+                        setTimeout(() => star.remove(), 4000);
+                    }, i * 50);
+                }
+
+                // Add bonus stars
+                for (let i = 0; i < 20; i++) {
+                    setTimeout(() => {
+                        StarPower.count++;
+                        StarPower.updateHUD();
+                    }, i * 100);
+                }
+            }
+        };
+
+        // ═══════════════════════════════════════
+        // EXISTING FEATURES (refactored)
+        // ═══════════════════════════════════════
+
+        // Loader
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loader').classList.add('hidden');
+                initHeroTitle();
+            }, 1800);
+        });
+
+        // Custom Cursor
+        const cursor = document.getElementById('cursor');
+        const follower = document.getElementById('cursor-follower');
+        let mx = 0, my = 0, fx = 0, fy = 0;
+        document.addEventListener('mousemove', e => {
+            mx = e.clientX; my = e.clientY;
+            cursor.style.left = mx - 4 + 'px';
+            cursor.style.top = my - 4 + 'px';
+        });
+        (function animFollower() {
+            fx += (mx - fx) * 0.12;
+            fy += (my - fy) * 0.12;
+            follower.style.left = fx - 18 + 'px';
+            follower.style.top = fy - 18 + 'px';
+            requestAnimationFrame(animFollower);
+        })();
+
+        document.querySelectorAll('a, button, .magnetic, .char-card, .trailer-wrapper, .collect-star').forEach(el => {
+            el.addEventListener('mouseenter', () => { cursor.classList.add('hovering'); follower.classList.add('hovering'); });
+            el.addEventListener('mouseleave', () => { cursor.classList.remove('hovering'); follower.classList.remove('hovering'); });
+        });
+
+        // Click burst
+        document.addEventListener('click', e => {
+            if (e.target.closest('.collect-star') || e.target.closest('#constellation-canvas.active')) return;
+            const burst = document.createElement('div');
+            burst.className = 'click-burst';
+            burst.style.left = e.clientX + 'px';
+            burst.style.top = e.clientY + 'px';
+            for (let i = 0; i < 8; i++) {
+                const p = document.createElement('div');
+                p.className = 'burst-particle';
+                const angle = (Math.PI * 2 / 8) * i;
+                const dist = 20 + Math.random() * 30;
+                p.style.setProperty('--bx', Math.cos(angle) * dist + 'px');
+                p.style.setProperty('--by', Math.sin(angle) * dist + 'px');
+                p.style.background = ['#ffc832','#e52521','#00d4ff','#ff6b9d'][Math.floor(Math.random()*4)];
+                burst.appendChild(p);
+            }
+            document.body.appendChild(burst);
+            setTimeout(() => burst.remove(), 700);
+        });
+
+        // Starfield Canvas
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        let stars = [], shootingStars = [];
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class Star {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2;
+                this.baseOpacity = 0.3 + Math.random() * 0.7;
+                this.opacity = this.baseOpacity;
+                this.twinkleSpeed = 0.005 + Math.random() * 0.02;
+                this.twinkleOffset = Math.random() * Math.PI * 2;
+            }
+            update(t) {
+                this.opacity = this.baseOpacity + Math.sin(t * this.twinkleSpeed + this.twinkleOffset) * 0.3;
+                this.opacity = Math.max(0.05, Math.min(1, this.opacity));
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(240,236,228,${this.opacity})`;
+                ctx.fill();
+            }
+        }
+
+        class ShootingStar {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height * 0.5;
+                this.len = 80 + Math.random() * 120;
+                this.speed = 4 + Math.random() * 6;
+                this.angle = Math.PI / 4 + (Math.random() - 0.5) * 0.3;
+                this.opacity = 1;
+                this.active = true;
+            }
+            update() {
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+                this.opacity -= 0.015;
+                if (this.opacity <= 0) this.active = false;
+            }
+            draw() {
+                if (!this.active) return;
+                const tailX = this.x - Math.cos(this.angle) * this.len;
+                const tailY = this.y - Math.sin(this.angle) * this.len;
+                const grad = ctx.createLinearGradient(tailX, tailY, this.x, this.y);
+                grad.addColorStop(0, 'rgba(240,236,228,0)');
+                grad.addColorStop(1, `rgba(255,200,50,${this.opacity})`);
+                ctx.beginPath();
+                ctx.moveTo(tailX, tailY);
+                ctx.lineTo(this.x, this.y);
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            }
+        }
+
+        for (let i = 0; i < 250; i++) stars.push(new Star());
+        let frameCount = 0;
+
+        (function animateStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            frameCount++;
+            stars.forEach(s => { s.update(frameCount); s.draw(); });
+            if (frameCount % 180 === 0 && shootingStars.length < 3) shootingStars.push(new ShootingStar());
+            shootingStars = shootingStars.filter(s => s.active);
+            shootingStars.forEach(s => { s.update(); s.draw(); });
+            requestAnimationFrame(animateStars);
+        })();
+
+        // Hero Title
+        function initHeroTitle() {
+            const line1 = document.getElementById('titleLine1');
+            const line2 = document.getElementById('titleLine2');
+            'SUPER MARIO'.split('').forEach((char, i) => {
+                const span = document.createElement('span');
+                span.className = 'char';
+                span.textContent = char === ' ' ? '\u00A0' : char;
+                span.style.animationDelay = (0.8 + i * 0.05) + 's';
+                line1.appendChild(span);
+            });
+            'GALAXY'.split('').forEach((char, i) => {
+                const span = document.createElement('span');
+                span.className = 'char';
+                span.textContent = char;
+                span.style.animationDelay = (1.2 + i * 0.06) + 's';
+                line2.appendChild(span);
+            });
+        }
+
+        // Scroll Progress
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            scrollProgress.style.width = (scrollTop / docHeight) * 100 + '%';
+        });
+
+        // Nav scroll
+        const nav = document.getElementById('mainNav');
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 80);
+        });
+
+        // Active nav
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const observerNav = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    const active = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+                    if (active) active.classList.add('active');
+                }
+            });
+        }, { threshold: 0.3 });
+        sections.forEach(s => observerNav.observe(s));
+
+        // Synopsis word reveal
+        const synopsisEl = document.getElementById('synopsisText');
+        const originalHTML = synopsisEl.innerHTML;
+        (function wrapWords() {
+            const temp = document.createElement('div');
+            temp.innerHTML = originalHTML;
+            const walker = document.createTreeWalker(temp, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+            while (walker.nextNode()) textNodes.push(walker.currentNode);
+            textNodes.forEach(node => {
+                const words = node.textContent.split(/(\s+)/);
+                const frag = document.createDocumentFragment();
+                words.forEach(word => {
+                    if (word.trim()) {
+                        const span = document.createElement('span');
+                        span.className = 'word';
+                        span.textContent = word;
+                        frag.appendChild(span);
+                    } else { frag.appendChild(document.createTextNode(word)); }
+                });
+                node.parentNode.replaceChild(frag, node);
+            });
+            synopsisEl.innerHTML = temp.innerHTML;
+        })();
+
+        const synopsisObserver = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    synopsisEl.querySelectorAll('.word').forEach((w, i) => {
+                        setTimeout(() => w.classList.add('visible'), i * 30);
+                    });
+                    synopsisObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.2 });
+        synopsisObserver.observe(synopsisEl);
+
+        // Stats reveal
+        const statsEl = document.querySelector('.synopsis-stats');
+        if (statsEl) {
+            const statsObserver = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.querySelectorAll('.stat').forEach((s, i) => {
+                            setTimeout(() => s.classList.add('revealed'), i * 150);
+                        });
+                        statsObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.3 });
+            statsObserver.observe(statsEl);
+        }
+
+        // Character 3D tilt
+        document.querySelectorAll('.char-card').forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const cx = rect.width / 2;
+                const cy = rect.height / 2;
+                card.style.transform = `perspective(800px) rotateX(${((y-cy)/cy)*-8}deg) rotateY(${((x-cx)/cx)*8}deg) translateY(0)`;
+                card.style.setProperty('--mouse-x', x + 'px');
+                card.style.setProperty('--mouse-y', y + 'px');
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(800px) rotateX(0) rotateY(0) translateY(0)';
+            });
+        });
+
+        // Char card reveal
+        const charGrid = document.querySelector('.characters-grid');
+        if (charGrid) {
+            const charObserver = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.querySelectorAll('.char-card').forEach(c => {
+                            setTimeout(() => c.classList.add('revealed'), parseInt(c.dataset.delay) + 100);
+                        });
+                        charObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+            charObserver.observe(charGrid);
+        }
+
+        // Horizontal scroll worlds
+        const worldsSection = document.getElementById('worlds');
+        const worldsTrack = document.getElementById('worldsTrack');
+        window.addEventListener('scroll', () => {
+            const rect = worldsSection.getBoundingClientRect();
+            const sectionScrollable = worldsSection.offsetHeight - window.innerHeight;
+            if (rect.top <= 0 && rect.bottom >= window.innerHeight) {
+                const progress = Math.max(0, Math.min(1, -rect.top / sectionScrollable));
+                const maxTranslate = worldsTrack.scrollWidth - window.innerWidth + 48;
+                worldsTrack.style.transform = `translateX(${-progress * maxTranslate}px)`;
+            }
+        }, { passive: true });
+
+        // Trailer stars
+        const trailerStarsEl = document.getElementById('trailerStars');
+        for (let i = 0; i < 40; i++) {
+            const star = document.createElement('div');
+            star.className = 'trailer-star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            star.style.animationDuration = (2 + Math.random() * 3) + 's';
+            trailerStarsEl.appendChild(star);
+        }
+
+        // Trailer modal
+        document.getElementById('trailerTrigger').addEventListener('click', () => {
+            document.getElementById('trailer-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        document.getElementById('modalClose').addEventListener('click', () => {
+            document.getElementById('trailer-modal').classList.remove('active');
+            document.body.style.overflow = '';
+        });
+        document.getElementById('trailer-modal').addEventListener('click', e => {
+            if (e.target.id === 'trailer-modal') {
+                document.getElementById('trailer-modal').classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                document.getElementById('trailer-modal').classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+
+        // Cast card reveal
+        const castGrid = document.querySelector('.cast-grid');
+        if (castGrid) {
+            const castObserver = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.querySelectorAll('.cast-card').forEach(c => {
+                            setTimeout(() => c.classList.add('revealed'), parseInt(c.dataset.delay) + 100);
+                        });
+                        castObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+            castObserver.observe(castGrid);
+        }
+
+        // Magnetic buttons
+        document.querySelectorAll('.magnetic').forEach(el => {
+            if (el.classList.contains('char-card') || el.classList.contains('trailer-wrapper')) return;
+            el.addEventListener('mousemove', e => {
+                const rect = el.getBoundingClientRect();
+                el.style.transform = `translate(${(e.clientX - rect.left - rect.width/2) * 0.15}px, ${(e.clientY - rect.top - rect.height/2) * 0.15}px)`;
+            });
+            el.addEventListener('mouseleave', () => {
+                el.style.transform = 'translate(0, 0)';
+                el.style.transition = 'transform 0.4s ease';
+                setTimeout(() => el.style.transition = '', 400);
+            });
+        });
+
+        // Hero parallax
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > window.innerHeight) return;
+            document.querySelectorAll('.planet').forEach((p, i) => {
+                p.style.transform = `translateY(${window.scrollY * (0.1 + i * 0.05)}px)`;
+            });
+        }, { passive: true });
+
+        // ═══════════════════════════════════════
+        // INITIALIZE ALL INNOVATIVE FEATURES
+        // ═══════════════════════════════════════
+        StarPower.init();
+        GravityFlip.init();
+        GalaxyWarp.init();
+        Planet3D.init();
+        ConstellationCreator.init();
+        CosmicAudio.init();
+        KonamiCode.init();
+
+    })();
+    </script>
+</body>
+</html>
